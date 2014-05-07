@@ -1,0 +1,9 @@
+# Copyright (c) 2000  Svetoslav Tchekanov  (swetoslav@iname.com)
+#-------------------------------
+EnableLog=yes
+#-------------------------------
+SOCKSPort=8888
+#-------------------------------
+UseSHttpProxy=no
+SHttpProxyHost=127.0.0.1
+SHttpProxyPort=1081
