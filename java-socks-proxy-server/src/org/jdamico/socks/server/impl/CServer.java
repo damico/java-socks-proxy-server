@@ -29,17 +29,19 @@ package	org.jdamico.socks.server.impl;
 
 ///////////////////////////////////////////////
 
-import	java.net.*;
-import	java.io.*;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 
+import org.jdamico.socks.server.commons.Constants;
 import org.jdamico.socks.server.commons.Log;
 
 ///////////////////////////////////////////////
 
 public class CServer	implements	Runnable
 {
-	public	static	final	int	LISTEN_TIMEOUT	= 200;
-	public	static	final	int	DEFAULT_TIMEOUT	= 200;
+	
 	
 	protected	Object	m_lock;
 	
@@ -56,36 +58,26 @@ public class CServer	implements	Runnable
 	public	int		getProxyPort()	{	return	m_nProxyPort;	}
 	public	String	getProxyHost()	{	return	m_cProxyHost; 	}
 	
-	///////////////////////////////////////////////
 	
-	public	CServer( int ListenPort, String ProxyHost, int ProxyPort )
-	{
-		m_lock = this;
+	public	CServer(int listenPort, String proxyHost, int proxyPort) {
 		
-		m_nPort			= ListenPort;
-		m_cProxyHost	= ProxyHost;
-		m_nProxyPort	= ProxyPort;
-		
+		m_lock = this;	
+		m_nPort			= listenPort;
+		m_cProxyHost	= proxyHost;
+		m_nProxyPort	= proxyPort;
 		Log.Println( "SOCKS Server Created." );
 	}
 	
-	///////////////////////////////////////////////
-	
-	public	void	SetLock( Object lock )
-	{
+	public	void setLock( Object lock ) {
 		this.m_lock = lock;
 	}
 	
-	
-	///////////////////////////////////////////////
 
-	public	void	start()
-	{
+	public	void start() {
 		m_TheThread = new Thread( this );
 		m_TheThread.start();
 		Log.Println( "SOCKS Server Started." );
 	}
-	/////////////////////////////////////////////////////////////
 
 	public	void	stop()	{
 		
@@ -93,21 +85,14 @@ public class CServer	implements	Runnable
 		m_TheThread.stop();
 	}
 	
-	/////////////////////////////////////////////////////////////
-//	Common part of the server
-
 	public	void	run()
 	{
-		SetLock( this );
-
-		Listen();
-
-		Close();
+		setLock( this );
+		listen();
+		close();
 	}
-	/////////////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////
 
-	public	void	Close()		{
+	public	void close() {
 		
 		if( m_ListenSocket != null )	{
 			try	{
@@ -121,34 +106,29 @@ public class CServer	implements	Runnable
 		Log.Println( "SOCKS Server Closed." );
 	}
 	
-	///////////////////////////////////////////////
-	
 	public	boolean	isActive()	{
 		return	(m_ListenSocket != null);	
 	}
 	
-	///////////////////////////////////////////////
 	
-	private	void PrepareToListen()	throws java.net.BindException, IOException {
-	synchronized( m_lock )
-	{
-		m_ListenSocket = new ServerSocket( m_nPort );
-		m_ListenSocket.setSoTimeout( LISTEN_TIMEOUT );
-
-		if( m_nPort == 0 )	{
-			m_nPort = m_ListenSocket.getLocalPort();
+	private	void prepareToListen()	throws java.net.BindException, IOException {
+		synchronized( m_lock )
+		{
+			m_ListenSocket = new ServerSocket( m_nPort );
+			m_ListenSocket.setSoTimeout( Constants.LISTEN_TIMEOUT );
+	
+			if( m_nPort == 0 )	{
+				m_nPort = m_ListenSocket.getLocalPort();
+			}
+			Log.Println( "SOCKS Server Listen at Port : " + m_nPort );
 		}
-		Log.Println( "SOCKS Server Listen at Port : " + m_nPort );
 	}
-	}
-
-	///////////////////////////////////////////////
 	
-	protected	void	Listen()
-	{
+	protected	void listen() {
+	
 		try
 		{
-			PrepareToListen();
+			prepareToListen();
 		}
 		catch( java.net.BindException e )	{
 			Log.Error( "The Port "+m_nPort+" is in use !" );
@@ -161,37 +141,32 @@ public class CServer	implements	Runnable
 		}
 
 		while( isActive() )	{
-			CheckClientConnection();
+			checkClientConnection();
 			Thread.yield();
 		}
 	}
-	///////////////////////////////////////////////
 	
-	public	void	CheckClientConnection()	{
+	public	void checkClientConnection()	{
 		synchronized( m_lock )
-	{
-	//	Close() method was probably called.
-		if( m_ListenSocket == null )	return;
-
-		try
 		{
-			Socket	ClientSocket = m_ListenSocket.accept();
-			ClientSocket.setSoTimeout( DEFAULT_TIMEOUT );
-			
-			Log.Println( "Connection from : " + Log.getSocketInfo( ClientSocket ) );
-			
-			CProxy	Proxy = new CProxy( this, ClientSocket );
-			Proxy.start();
-		}
-		catch( InterruptedIOException e )		{
-		//	This exception is thrown when accept timeout is expired
-		}
-		catch( Exception e )	{
-			Log.Error( e );
-		}
-	}	// synchronized
-	}
-
+		//	Close() method was probably called.
+			if( m_ListenSocket == null )	return;
 	
+			try
+			{
+				Socket clientSocket = m_ListenSocket.accept();
+				clientSocket.setSoTimeout( Constants.DEFAULT_TIMEOUT );
+				Log.Println( "Connection from : " + Log.getSocketInfo( clientSocket ) );
+				CProxy proxy = new CProxy( this, clientSocket );
+				proxy.start();
+			}
+			catch( InterruptedIOException e )		{
+			//	This exception is thrown when accept timeout is expired
+			}
+			catch( Exception e )	{
+				Log.Error( e );
+			}
+		}	// synchronized
+	}
 }
 
