@@ -28,7 +28,7 @@ public class ProxyServerInitiator	implements	Runnable
 	
 	public	int		getPort()		{	return	m_nPort;		}
 
-	public	ProxyServerInitiator(int listenPort, String proxyHost, int proxyPort) {
+	public	ProxyServerInitiator(int listenPort) {
 		
 		m_lock = this;	
 		m_nPort			= listenPort;

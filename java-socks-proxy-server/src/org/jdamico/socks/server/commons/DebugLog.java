@@ -24,12 +24,12 @@ public class DebugLog
 
 	
 	public	void	println( String txt )	{
-		if( StartProxy.enableLog )	print( txt + Constants.EOL );
+		if( StartProxy.enableDebugLog )	print( txt + Constants.EOL );
 	}
 
 	
 	public	void	print( String txt )	{
-		if( !StartProxy.enableLog )	return;
+		if( !StartProxy.enableDebugLog )	return;
 		if( txt == null )	return;
 		System.out.print( txt );	
 	}
@@ -37,13 +37,13 @@ public class DebugLog
 	/////////////////////////////////////////////////
 	
 	public	void	error( String txt )	{
-		if( StartProxy.enableLog )	println( "Error : " + txt );
+		if( StartProxy.enableDebugLog )	println( "Error : " + txt );
 	}
 	
 	/////////////////////////////////////////////////
 	
 	public	void	error( Exception e )	{
-		if( !StartProxy.enableLog )	return;
+		if( !StartProxy.enableDebugLog )	return;
 		println( "ERROR : " + e.toString() );
 		e.printStackTrace();
 	}
