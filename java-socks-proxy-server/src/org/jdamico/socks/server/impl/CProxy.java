@@ -1,34 +1,8 @@
-/*************************************************************************
- FILE :		  CProxy.java
 
- Author :	  Svetoslav Tchekanov  (swetoslav@iname.com)
-
- Description: CProxy class definition.
-
-			  CProxy.class is the implementation of TCP Proxy server
-
-
- Copyright notice:
-	Written by Svetoslav Tchekanov (swetoslav@iname.com)
-	Copyright(c) 2000
-
-This code may be used in compiled form in any way you desire. This
-file may be redistributed unmodified by any means PROVIDING it is 
-not sold for profit without the authors written consent, and 
-providing that this notice and the authors name is included. If 
-the source code in this file is used in any commercial application 
-then a simple email would be nice.
-
-This file is provided "as is" with no expressed or implied warranty.
-The author accepts no liability if it causes any damage to your
-computer.
-
-*************************************************************************/
 
 
 package	org.jdamico.socks.server.impl;
 
-///////////////////////////////////////////////
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +15,6 @@ import java.net.UnknownHostException;
 import org.jdamico.socks.server.commons.Constants;
 import org.jdamico.socks.server.commons.Log;
 
-///////////////////////////////////////////////
 
 public class CProxy	implements	Runnable
 {
@@ -61,18 +34,6 @@ public class CProxy	implements	Runnable
 	public	InputStream		m_ServerInput	= null;
 	public	OutputStream	m_ServerOutput	= null;
 	
-	
-	
-
-	//protected	String	m_cProxyHost		= null;
-	//protected	int		m_nProxyPort		= 0;
-	
-
-	//public	int		getProxyPort()	{	return	m_nProxyPort;	}
-	//public	String	getProxyHost()	{	return	m_cProxyHost; 	}
-
-
-	//public	CProxy(String proxyHost, int proxyPort, Socket clientSocket) {
 	public	CProxy(Socket clientSocket) {	
 		m_lock = this;
 		m_ClientSocket = clientSocket;
@@ -84,9 +45,6 @@ public class CProxy	implements	Runnable
 				Log.Error( "Socket Exception during seting Timeout." );
 			}
 		}
-
-		//m_cProxyHost	= proxyHost;
-		//m_nProxyPort	= proxyPort;
 		
 		m_Buffer = new byte[ Constants.DEFAULT_BUF_SIZE ];
 		
@@ -118,7 +76,7 @@ public class CProxy	implements	Runnable
 		
 		Log.Println( "Proxy Stopped." );
 		
-		m_TheThread.stop();
+		m_TheThread.interrupt();
 	}
 	 
 	public	void	run()
@@ -337,11 +295,12 @@ public class CProxy	implements	Runnable
 				sendToClient( m_Buffer, dlen );
 			}
 			
-			Thread.currentThread().yield();
+			Thread.currentThread();
+			Thread.yield();
 		}	// while
 	}
 	
-	/////////////////////////////////////////////////////////////
+	
 
 	public	int	 checkClientData()	{
 		synchronized( m_lock )

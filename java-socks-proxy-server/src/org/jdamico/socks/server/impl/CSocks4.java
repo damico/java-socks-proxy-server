@@ -370,17 +370,16 @@ public class CSocks4
 */	
 		Log.Println( "Local IP : " + MyIP.toString() );
 		
+		
 		try	{	
 			ssock = new ServerSocket( 0 );
 			ssock.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
-			if( MyIP == null )	{
-				MyIP = ssock.getInetAddress();
-			}
 			MyPort	= ssock.getLocalPort();
 		}
 		catch( IOException e )	{  // MyIP == null
 			Log.Println( "Error in BIND() - Can't BIND at any Port" );
 			BIND_Reply( (byte)92, MyIP,MyPort );
+			ssock.close();
 			return;
 		}
 
@@ -393,6 +392,7 @@ public class CSocks4
 		{
 			if( m_Parent.checkClientData() >= 0 ) {
 				Log.Println( "BIND - Client connection closed" );
+				ssock.close();
 				return;
 			}
 
@@ -401,9 +401,11 @@ public class CSocks4
 				socket.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
 			}
 			catch( InterruptedIOException e ) {
+				socket.close();
 			}
 			Thread.yield();
 		}
+		
 		
 /*		if( socket.getInetAddress() != m_m_ServerIP )	{
 			BIND_Reply( (byte)91,	socket.getInetAddress(), 
@@ -424,6 +426,9 @@ public class CSocks4
 		m_Parent.prepareServer();
 		
 		Log.Println( "BIND Connection from "+Log.getSocketInfo( m_Parent.m_ServerSocket ) );
+		ssock.close();
+		
+		
 	}// BIND...
 	/////////////////////////////////////////////////////////////
 

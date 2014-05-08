@@ -1,33 +1,8 @@
-/*************************************************************************
- FILE :		  CServer.java
 
- Author :	  Svetoslav Tchekanov  (swetoslav@iname.com)
-
- Description: CServer class definition.
-
-			  CServer.class is the implementation of TCP server
-
-
- Copyright notice:
-	Written by Svetoslav Tchekanov (swetoslav@iname.com)
-	Copyright(c) 2000
-
-This code may be used in compiled form in any way you desire. This
-file may be redistributed unmodified by any means PROVIDING it is 
-not sold for profit without the authors written consent, and 
-providing that this notice and the authors name is included. If 
-the source code in this file is used in any commercial application 
-then a simple email would be nice.
-
-This file is provided "as is" with no expressed or implied warranty.
-The author accepts no liability if it causes any damage to your
-computer.
-
-*************************************************************************/
 
 package	org.jdamico.socks.server.impl;
 
-///////////////////////////////////////////////
+
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -37,7 +12,7 @@ import java.net.Socket;
 import org.jdamico.socks.server.commons.Constants;
 import org.jdamico.socks.server.commons.Log;
 
-///////////////////////////////////////////////
+
 
 public class CServer	implements	Runnable
 {
@@ -74,7 +49,7 @@ public class CServer	implements	Runnable
 	public	void	stop()	{
 		
 		Log.Println( "SOCKS Server Stopped." );
-		m_TheThread.stop();
+		m_TheThread.interrupt();
 	}
 	
 	public	void	run()
