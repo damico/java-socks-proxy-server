@@ -27,27 +27,19 @@ computer.
 
 package	org.jdamico.socks.server.impl;
 
-///////////////////////////////////////////////
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
-import	java.math.*;
-import	java.io.*;
-import	java.net.*;
-
+import org.jdamico.socks.server.commons.Constants;
 import org.jdamico.socks.server.commons.Log;
-
-///////////////////////////////////////////////
-
-//--------------------------------------------------------------------
 
 public class CSocks4
 {
 	public	byte	SOCKS_Version = 0;
-	
-	final	byte	SOCKS4_Version	= 0x04;
-	
-	static	byte	SRE_Refuse[] = { (byte)0x05, (byte)0xFF };
-	static	byte	SRE_Accept[] = { (byte)0x05, (byte)0x00 };
-	
 
 	public	CProxy	m_Parent	= null;
 	
@@ -58,10 +50,7 @@ public class CSocks4
 	
 	public	String	UID = "";
 	
-	static	final	byte	SC_CONNECT	= 0x01;
-	static	final	byte	SC_BIND		= 0x02;
-	static	final	byte	SC_UDP		= 0x03;	// Not allowed
-												// on SOCKS4
+
 	
 	//--- Reply Codes ---
 	protected	byte	getSuccessCode()	{ return 90; }
@@ -81,19 +70,13 @@ public class CSocks4
 	
 	public	InetAddress	m_ExtLocalIP	= null;
 	
-	//------------------------------------------------------------
-	/////////////////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////////
-	
 	public	String	commName( byte code )	{
 	
 		switch( code )	{
-		case 0x01: return "CONNECT";
-		case 0x02: return "BIND";
-		case 0x03: return "UDP Association";
-			
-		default:	return "Unknown Command";
+			case 0x01: return "CONNECT";
+			case 0x02: return "BIND";
+			case 0x03: return "UDP Association";
+			default:	return "Unknown Command";
 		}
 	
 	}
@@ -199,7 +182,7 @@ public class CSocks4
 	{
 		byte	b;
 		try	{
-			b = m_Parent.GetByteFromClient();
+			b = m_Parent.getByteFromClient();
 		}
 		catch( Exception e )	{
 			b = 0;
@@ -236,7 +219,7 @@ public class CSocks4
 		}
 		Calculate_UserID();
 		
-		if( (Command < SC_CONNECT) || (Command > SC_BIND) )	{
+		if( (Command < Constants.SC_CONNECT) || (Command > Constants.SC_BIND) )	{
 			Refuse_Command( (byte)91 );
 			throw	new Exception( "Socks 4 - Unsupported Command : "+commName( Command ) );
 		}
@@ -264,7 +247,7 @@ public class CSocks4
 		REPLY[6]= DST_Addr[2];
 		REPLY[7]= DST_Addr[3];
 			
-		m_Parent.SendToClient( REPLY );
+		m_Parent.sendToClient( REPLY );
 	} // Reply_Command()
 	/////////////////////////////////////////////////////////////
 			
@@ -280,7 +263,7 @@ public class CSocks4
 		Log.Println( "Connecting..." );
 	//	Connect to the Remote Host
 		try	{
-			m_Parent.ConnectToServer( m_ServerIP.getHostAddress(), m_nServerPort );
+			m_Parent.connectToServer( m_ServerIP.getHostAddress(), m_nServerPort );
 		}
 		catch( IOException e )	{
 			Refuse_Command( getFailCode() ); // Connection Refused
@@ -317,7 +300,7 @@ public class CSocks4
 		REPLY[7]= IP[3];
 			
 		if( m_Parent.isActive() )	{
-			m_Parent.SendToClient( REPLY );
+			m_Parent.sendToClient( REPLY );
 		}
 		else	{
 			Log.Println( "Closed BIND Client Connection" );
@@ -389,7 +372,7 @@ public class CSocks4
 		
 		try	{	
 			ssock = new ServerSocket( 0 );
-			ssock.setSoTimeout( m_Parent.DEFAULT_TIMEOUT );
+			ssock.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
 			if( MyIP == null )	{
 				MyIP = ssock.getInetAddress();
 			}
@@ -408,14 +391,14 @@ public class CSocks4
 
 		while( socket == null )
 		{
-			if( m_Parent.CheckClientData() >= 0 ) {
+			if( m_Parent.checkClientData() >= 0 ) {
 				Log.Println( "BIND - Client connection closed" );
 				return;
 			}
 
 			try {
 				socket = ssock.accept();
-				socket.setSoTimeout( m_Parent.DEFAULT_TIMEOUT );
+				socket.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
 			}
 			catch( InterruptedIOException e ) {
 			}
@@ -438,7 +421,7 @@ public class CSocks4
 								socket.getPort() );
 		
 		m_Parent.m_ServerSocket = socket;
-		m_Parent.PrepareServer();
+		m_Parent.prepareServer();
 		
 		Log.Println( "BIND Connection from "+Log.getSocketInfo( m_Parent.m_ServerSocket ) );
 	}// BIND...

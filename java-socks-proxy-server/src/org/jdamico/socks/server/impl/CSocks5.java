@@ -29,17 +29,21 @@ package	org.jdamico.socks.server.impl;
 
 ///////////////////////////////////////////////
 
-import	java.math.*;
-import	java.io.*;
-import	java.net.*;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
+import org.jdamico.socks.server.commons.Constants;
 import org.jdamico.socks.server.commons.Log;
 
 ///////////////////////////////////////////////
 
-public class CSocks5	extends CSocks4
+public class CSocks5 extends CSocks4
 {
-	final			byte	SOCKS5_Version	= 0x05;
+	
 	
 	static	final	int		MaxAddrLen	= 255;
 	
@@ -71,7 +75,7 @@ public class CSocks5	extends CSocks4
 									  -1, //'03' First Byte is Len
 									  16  //'04' IP v6 - 16bytes
 									};
-	static	final byte	SRE_Accept[] = { (byte)0x05, (byte)0x00 };
+	
 	
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
@@ -133,7 +137,7 @@ public class CSocks5	extends CSocks4
 		super.Authenticate( SOCKS_Ver ); // Sets SOCKS Version...
 		
 		
-		if( SOCKS_Version == SOCKS5_Version )	{	
+		if( SOCKS_Version == Constants.SOCKS5_Version )	{	
 			if( !CheckAuthentication() )	{// It reads whole Cli Request
 				Refuse_Authentication("SOCKS 5 - Not Supported Authentication!");
 				throw new Exception("SOCKS 5 - Not Supported Authentication.");
@@ -151,15 +155,15 @@ public class CSocks5	extends CSocks4
 	public	void	Refuse_Authentication( String msg )	{
 
 		Log.Println( "SOCKS 5 - Refuse Authentication: '"+msg+"'" );
-		m_Parent.SendToClient( SRE_Refuse );
+		m_Parent.sendToClient( Constants.SRE_Refuse );
 	}
 	/////////////////////////////////////////////////////////////
 	
 	public	void	Accept_Authentication()	{
 		Log.Println( "SOCKS 5 - Accepts Auth. method 'NO_AUTH'" );
-		
-		SRE_Accept[0] = SOCKS_Version;
-		m_Parent.SendToClient( SRE_Accept );
+		byte[] tSRE_Accept = Constants.SRE_Accept;
+		tSRE_Accept[0] = SOCKS_Version;
+		m_Parent.sendToClient( tSRE_Accept );
 	}
 	/////////////////////////////////////////////////////////////
 	
@@ -200,7 +204,7 @@ public class CSocks5	extends CSocks4
 		DST_Port[0]	= GetByte();
 		DST_Port[1]	= GetByte();
 		
-		if( SOCKS_Version != SOCKS5_Version )	{
+		if( SOCKS_Version != Constants.SOCKS5_Version )	{
 			Log.Println( "SOCKS 5 - Incorrect SOCKS Version of Command: "+
 						 SOCKS_Version );
 			Refuse_Command( (byte)0xFF );
@@ -208,7 +212,7 @@ public class CSocks5	extends CSocks4
 								  SOCKS_Version);
 		}
 		
-		if( (Command < SC_CONNECT) || (Command > SC_UDP) )	{
+		if( (Command < Constants.SC_CONNECT) || (Command > SC_UDP) )	{
 			Log.Error( "SOCKS 5 - GetClientCommand() - Unsupported Command : \"" + commName( Command )+"\"" );
 			Refuse_Command( (byte)0x07 );
 			throw new Exception("SOCKS 5 - Unsupported Command: \"" + Command +"\"" );
@@ -259,7 +263,7 @@ public class CSocks5	extends CSocks4
 			pt = 0;
 		}
 			
-		REPLY[0] = SOCKS5_Version;
+		REPLY[0] = Constants.SOCKS5_Version;
 		REPLY[1] = ReplyCode;	// Reply Code;
 		REPLY[2] = 0x00;		// Reserved	'00'
 		REPLY[3] = 0x01;		// DOMAIN NAME Type IP ver.4
@@ -270,7 +274,7 @@ public class CSocks5	extends CSocks4
 		REPLY[8] = (byte)((pt & 0xFF00) >> 8);// Port High
 		REPLY[9] = (byte) (pt & 0x00FF);	  // Port Low
 			
-		m_Parent.SendToClient( REPLY );// BND.PORT
+		m_Parent.sendToClient( REPLY );// BND.PORT
 	} // Reply_Command()
 	/////////////////////////////////////////////////////////////
 	
@@ -285,7 +289,7 @@ public class CSocks5	extends CSocks4
 		byte[]	REPLY = new byte[10];
 		if( IA != null )	IP = IA.getAddress();
 			
-		REPLY[0] = SOCKS5_Version;
+		REPLY[0] = Constants.SOCKS5_Version;
 		REPLY[1] = (byte)((int)ReplyCode - 90);	// Reply Code;
 		REPLY[2] = 0x00;		// Reserved	'00'
 		REPLY[3] = 0x01;		// IP ver.4 Type
@@ -297,7 +301,7 @@ public class CSocks5	extends CSocks4
 		REPLY[9] = (byte) (PT & 0x00FF);
 			
 		if( m_Parent.isActive() )	{
-			m_Parent.SendToClient( REPLY );
+			m_Parent.sendToClient( REPLY );
 		}
 		else	{
 			Log.Println( "BIND - Closed Client Connection" );
@@ -330,7 +334,7 @@ public class CSocks5	extends CSocks4
 			 
 		byte[]	REPLY = new byte[10];
 			
-		REPLY[0] = SOCKS5_Version;
+		REPLY[0] = Constants.SOCKS5_Version;
 		REPLY[1] = ReplyCode;	// Reply Code;
 		REPLY[2] = 0x00;		// Reserved	'00'
 		REPLY[3] = 0x01;		// Address Type	IP v4
@@ -342,7 +346,7 @@ public class CSocks5	extends CSocks4
 		REPLY[8] = (byte)((PT & 0xFF00) >> 8);// Port High
 		REPLY[9] = (byte) (PT & 0x00FF);		 // Port Low
 			
-		m_Parent.SendToClient( REPLY );// BND.PORT
+		m_Parent.sendToClient( REPLY );// BND.PORT
 	} // Reply_Command()
 	
 	
@@ -372,7 +376,7 @@ public class CSocks5	extends CSocks4
 		
 		Log.Println( "UDP Listen at: <"+MyIP.toString()+":"+MyPort+">" );
 
-		while( m_Parent.CheckClientData() >= 0 )
+		while( m_Parent.checkClientData() >= 0 )
 		{
 			ProcessUDP();
 			Thread.yield();
@@ -383,11 +387,11 @@ public class CSocks5	extends CSocks4
 	
 	private	void	Init_UDP_InOut()	throws IOException {
 		
-		DGSocket.setSoTimeout ( m_Parent.DEFAULT_TIMEOUT );	
+		DGSocket.setSoTimeout ( Constants.DEFAULT_PROXY_TIMEOUT );	
 				
-		m_Parent.m_Buffer = new byte[ m_Parent.m_BufLen ];
+		m_Parent.m_Buffer = new byte[ Constants.DEFAULT_BUF_SIZE ];
 		
-		DGPack = new DatagramPacket( m_Parent.m_Buffer, m_Parent.m_BufLen );
+		DGPack = new DatagramPacket( m_Parent.m_Buffer, Constants.DEFAULT_BUF_SIZE );
 	}
 	/////////////////////////////////////////////////////////////
 	
@@ -502,7 +506,7 @@ public class CSocks5	extends CSocks4
 		}
 		catch( IOException e )	{
 			Log.Println( "IOError in Init_UDP_IO() - "+ e.toString() );
-			m_Parent.Close();
+			m_Parent.close();
 		}
 	} // ProcessUDP()...
 	

@@ -30,9 +30,15 @@ package	org.jdamico.socks.server.impl;
 
 ///////////////////////////////////////////////
 
-import	java.io.*;
-import	java.net.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InterruptedIOException;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
+import org.jdamico.socks.server.commons.Constants;
 import org.jdamico.socks.server.commons.Log;
 
 ///////////////////////////////////////////////
@@ -41,17 +47,13 @@ public class CProxy	implements	Runnable
 {
 	protected	Object	m_lock;
 	
-	public static final int	DEFAULT_BUF_SIZE = 4096;
+	
 	
 	protected	Thread		m_TheThread	= null;
-	
-	protected	CServer			m_SocksServer	= null;
-	public	CServer	getSocksServer()	{	return m_SocksServer;	}
-	
+
 	public	Socket			m_ClientSocket	= null;
 	public	Socket			m_ServerSocket	= null;
 	
-	public	int				m_BufLen		= DEFAULT_BUF_SIZE;
 	public	byte[]			m_Buffer		= null;
 	
 	public	InputStream		m_ClientInput	= null;
@@ -59,63 +61,48 @@ public class CProxy	implements	Runnable
 	public	InputStream		m_ServerInput	= null;
 	public	OutputStream	m_ServerOutput	= null;
 	
-	public static final int DEFAULT_TIMEOUT	= 10;
+	
 	
 
-	protected	String	m_cProxyHost		= null;
-	protected	int		m_nProxyPort		= 0;
+	//protected	String	m_cProxyHost		= null;
+	//protected	int		m_nProxyPort		= 0;
 	
 
-	public	int		getProxyPort()	{	return	m_nProxyPort;	}
-	public	String	getProxyHost()	{	return	m_cProxyHost; 	}
+	//public	int		getProxyPort()	{	return	m_nProxyPort;	}
+	//public	String	getProxyHost()	{	return	m_cProxyHost; 	}
 
-	///////////////////////////////////////////////
-	
-	public	CProxy( CServer SocksServer, Socket ClientSocket )
-	{
+
+	//public	CProxy(String proxyHost, int proxyPort, Socket clientSocket) {
+	public	CProxy(Socket clientSocket) {	
 		m_lock = this;
-		
-		m_SocksServer = SocksServer;
-		if( m_SocksServer == null )	{
-			Close();
-			return;
-		}
-		
-		m_ClientSocket = ClientSocket;
+		m_ClientSocket = clientSocket;
 		if( m_ClientSocket != null )	{
 			try	{
-				m_ClientSocket.setSoTimeout( DEFAULT_TIMEOUT );
+				m_ClientSocket.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
 			}
 			catch( SocketException e )	{
 				Log.Error( "Socket Exception during seting Timeout." );
 			}
 		}
 
-		m_cProxyHost	= m_SocksServer.m_cProxyHost;
-		m_nProxyPort	= m_SocksServer.m_nProxyPort;
+		//m_cProxyHost	= proxyHost;
+		//m_nProxyPort	= proxyPort;
 		
-		m_Buffer = new byte[ m_BufLen ];
+		m_Buffer = new byte[ Constants.DEFAULT_BUF_SIZE ];
 		
 		Log.Println( "Proxy Created." );
 	}
-	
-	///////////////////////////////////////////////
-	
-	public	void	SetLock( Object lock )
-	{
+		
+	public	void setLock( Object lock ) {
 		this.m_lock = lock;
 	}
 	
-	
-	///////////////////////////////////////////////
-
 	public	void	start()
 	{
 		m_TheThread = new Thread( this );
 		m_TheThread.start();
 		Log.Println( "Proxy Started." );
 	}
-	/////////////////////////////////////////////////////////////
 
 	public	void	stop()	{
 	
@@ -133,27 +120,22 @@ public class CProxy	implements	Runnable
 		
 		m_TheThread.stop();
 	}
-	
-	/////////////////////////////////////////////////////////////
-//	Common part of the server
-
+	 
 	public	void	run()
 	{
-		SetLock( this );
+		setLock( this );
 		
-		if( ! PrepareClient() )	{
+		if( !prepareClient() )	{
 			Log.Error( "Proxy - client socket is null !" );
 			return;
 		}
 
-		ProcessRelay();
+		processRelay();
 
-		Close();
+		close();
 	}
-	///////////////////////////////////////////////
-	///////////////////////////////////////////////
-
-	public	void	Close()		{
+	
+	public	void close()		{
 		try	{
 			if( m_ClientOutput != null )	{
 				m_ClientOutput.flush();
@@ -192,39 +174,34 @@ public class CProxy	implements	Runnable
 		
 		Log.Println( "Proxy Closed." );
 	}
-	///////////////////////////////////////////////
-	///////////////////////////////////////////////
 	
-	public	void	SendToClient( byte[] Buf )	{
-		
-		SendToClient( Buf, Buf.length );
+	public	void sendToClient( byte[] buffer )	{
+		sendToClient( buffer, buffer.length );
 	}
-	//--------------
-	public	void	SendToClient( byte[] Buf, int Len )	{
+	
+	public	void sendToClient( byte[] buffer, int len )	{
 		if( m_ClientOutput == null )		return;
-		if( Len <= 0 || Len > Buf.length )	return;
+		if( len <= 0 || len > buffer.length )	return;
 		
 		try	{
-			m_ClientOutput.write( Buf, 0, Len );
+			m_ClientOutput.write( buffer, 0, len );
 			m_ClientOutput.flush();
 		}
 		catch( IOException e )	{
 			Log.Error( "Sending data to client" );
 		}
 	}
-	///////////////////////////////////////////////
 	
-	public	void	SendToServer( byte[] Buf )	{
-		
-		SendToServer( Buf, Buf.length );
+	public void sendToServer( byte[] buffer )	{
+		sendToServer( buffer, buffer.length );
 	}
-	//----------------
-	public	void	SendToServer( byte[] Buf, int Len )	{
+	
+	public	void sendToServer( byte[] buffer, int len )	{
 		if( m_ServerOutput == null )		return;
-		if( Len <= 0 || Len > Buf.length )	return;
+		if( len <= 0 || len > buffer.length )	return;
 		
 		try	{
-			m_ServerOutput.write( Buf, 0, Len );
+			m_ServerOutput.write( buffer, 0, len );
 			m_ServerOutput.flush();
 		}
 		catch( IOException e )	{
@@ -232,45 +209,36 @@ public class CProxy	implements	Runnable
 		}
 	}
 	
-	///////////////////////////////////////////////
 	
 	public	boolean	isActive()	{
 		return	(m_ClientSocket != null && m_ServerSocket != null);	
 	}
 	
-	///////////////////////////////////////////////
-	///////////////////////////////////////////////
 	
-	public	void	ConnectToServer( String Server, int port ) 
-		throws IOException, UnknownHostException
-	{
-	//	Connect to the Remote Host
-		
-		if( Server.equals("") )	{
-			Close();
+	public	void connectToServer( String server, int port ) throws IOException, UnknownHostException {
+
+		if( server.equals("") )	{
+			close();
 			Log.Error( "Invalid Remote Host Name - Empty String !!!" );
 			return;
 		}
 		
-
-		
-		m_ServerSocket = new Socket( Server, port );
-		m_ServerSocket.setSoTimeout( DEFAULT_TIMEOUT );
+		m_ServerSocket = new Socket( server, port );
+		m_ServerSocket.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
 		
 		Log.Println( "Connected to "+Log.getSocketInfo( m_ServerSocket ) );
-		PrepareServer();
+		prepareServer();
 	}
-	/////////////////////////////////////////////////////////////
-	protected	void	PrepareServer()	throws IOException	{
-	synchronized( m_lock )
-	{
-		m_ServerInput  = m_ServerSocket.getInputStream();
-		m_ServerOutput = m_ServerSocket.getOutputStream();
+
+	protected void prepareServer() throws IOException	{
+		synchronized( m_lock )
+		{
+			m_ServerInput  = m_ServerSocket.getInputStream();
+			m_ServerOutput = m_ServerSocket.getOutputStream();
+		}
 	}
-	}
-	/////////////////////////////////////////////////////////////
 	
-	public	boolean	PrepareClient()	{
+	public	boolean	prepareClient()	{
 		if( m_ClientSocket == null )	return false;
 
 		try	{
@@ -284,24 +252,21 @@ public class CProxy	implements	Runnable
 		}
 		return	true;
 	}
-
-	///////////////////////////////////////////////
 	
-	static	final	byte	SOCKS5_Version	= 0x05;
-	static	final	byte	SOCKS4_Version	= 0x04;
+	
 
 	CSocks4	comm = null;
 	
-	public	void	ProcessRelay()	{
+	public	void processRelay()	{
 		
 		try	{
-			byte	SOCKS_Version	= GetByteFromClient();
+			byte SOCKS_Version	= getByteFromClient();
 			
 			switch( SOCKS_Version )	{
-			case SOCKS4_Version:	comm = new CSocks4( this );
-									break;
-			case SOCKS5_Version:	comm = new CSocks5( this );	
-									break;
+			case Constants.SOCKS4_Version:	comm = new CSocks4( this );
+											break;
+			case Constants.SOCKS5_Version:	comm = new CSocks5( this );	
+											break;
 			default:	Log.Error( "Invalid SOKCS version : "+SOCKS_Version );
 						return;
 			}
@@ -311,15 +276,15 @@ public class CProxy	implements	Runnable
 			comm.GetClientCommand();
 			
 			switch ( comm.Command )	{
-			case CSocks4.SC_CONNECT	:	comm.Connect();
-										Relay();
+			case Constants.SC_CONNECT	:	comm.Connect();
+										relay();
 										break;
 			
-			case CSocks4.SC_BIND	:	comm.Bind();
-										Relay();
+			case Constants.SC_BIND	:	comm.Bind();
+										relay();
 										break;
 			
-			case CSocks4.SC_UDP		:	comm.UDP();
+			case Constants.SC_UDP		:	comm.UDP();
 										break;
 			}
 		}
@@ -328,11 +293,8 @@ public class CProxy	implements	Runnable
 		}
 	} 
 
-	public	byte	GetByteFromClient()
-		throws Exception
-	{
+	public	byte getByteFromClient() throws Exception {
 		int	b;
-		
 		while( m_ClientSocket != null )		{
 			
 			try	{
@@ -349,35 +311,30 @@ public class CProxy	implements	Runnable
 		throw	new Exception( "Interrupted Reading GetByteFromClient()");
 	} // GetByteFromClient()...
 	
+	public	void relay()	{
 	
-	public	static	final	String	EOL = "\r\n";
-	
-	
-	
-	public	void	Relay()	{
-	
-		boolean	Active		= true;
-		int		dlen		= 0;
+		boolean	isActive = true;
+		int		dlen = 0;
 
-		while( Active )	{
+		while( isActive )	{
 			
 		//---> Check for client data <---
 			
-			dlen = CheckClientData();
+			dlen = checkClientData();
 			
-			if( dlen < 0 )	Active = false;
+			if( dlen < 0 )	isActive = false;
 			if( dlen > 0 )	{
-				LogClientData( dlen );
-				SendToServer( m_Buffer, dlen );
+				logClientData( dlen );
+				sendToServer( m_Buffer, dlen );
 			}
 			
 			//---> Check for Server data <---
-			dlen = CheckServerData();
+			dlen = checkServerData();
 			
-			if( dlen < 0 )	Active = false;
+			if( dlen < 0 )	isActive = false;
 			if( dlen > 0 )	{
-				LogServerData( dlen );
-				SendToClient( m_Buffer, dlen );
+				logServerData( dlen );
+				sendToClient( m_Buffer, dlen );
 			}
 			
 			Thread.currentThread().yield();
@@ -386,66 +343,61 @@ public class CProxy	implements	Runnable
 	
 	/////////////////////////////////////////////////////////////
 
-	public	int		CheckClientData()	{
-	synchronized( m_lock )
-	{
-	//	The client side is not opened.
-		if( m_ClientInput == null )	return -1;
-
-		int	dlen = 0;
-
-		try
+	public	int	 checkClientData()	{
+		synchronized( m_lock )
 		{
-			dlen = m_ClientInput.read( m_Buffer, 0, m_BufLen );
-		}
-		catch( InterruptedIOException e )		{
-			return	0;
-		}
-		catch( IOException e )		{
-			Log.Println( "Client connection Closed!" );
-			Close();	//	Close the server on this exception
-			return -1;
-		}
-
-		if( dlen < 0 )	Close();
-
-		return	dlen;
-	}
-	}
-	///////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////
-
-	public	int		CheckServerData()	{
-	synchronized( m_lock )
-	{
-	//	The client side is not opened.
-		if( m_ServerInput == null )	return -1;
-
-		int	dlen = 0;
-
-		try
-		{
-			dlen = m_ServerInput.read( m_Buffer, 0, m_BufLen );
-		}
-		catch( InterruptedIOException e )		{
-			return	0;
-		}
-		catch( IOException e )		{
-			Log.Println( "Server connection Closed!" );
-			Close();	//	Close the server on this exception
-			return -1;
-		}
-
-		if( dlen < 0 )	Close();
-
-		return	dlen;
-	}
-	}
-	///////////////////////////////////////////////
-
-	///////////////////////////////////////////////
+		//	The client side is not opened.
+			if( m_ClientInput == null )	return -1;
 	
-	public	void	LogServerData( int traffic )	{
+			int	dlen = 0;
+	
+			try
+			{
+				dlen = m_ClientInput.read( m_Buffer, 0, Constants.DEFAULT_BUF_SIZE );
+			}
+			catch( InterruptedIOException e )		{
+				return	0;
+			}
+			catch( IOException e )		{
+				Log.Println( "Client connection Closed!" );
+				close();	//	Close the server on this exception
+				return -1;
+			}
+	
+			if( dlen < 0 )	close();
+	
+			return	dlen;
+		}
+	}
+	
+	public	int	checkServerData()	{
+		synchronized( m_lock )
+		{
+		//	The client side is not opened.
+			if( m_ServerInput == null )	return -1;
+	
+			int	dlen = 0;
+	
+			try
+			{
+				dlen = m_ServerInput.read( m_Buffer, 0, Constants.DEFAULT_BUF_SIZE );
+			}
+			catch( InterruptedIOException e )		{
+				return	0;
+			}
+			catch( IOException e )		{
+				Log.Println( "Server connection Closed!" );
+				close();	//	Close the server on this exception
+				return -1;
+			}
+	
+			if( dlen < 0 )	close();
+	
+			return	dlen;
+		}
+	}
+
+	public	void	logServerData( int traffic )	{
 		Log.Println("Srv data : "+
 					Log.getSocketInfo( m_ClientSocket ) +
 					" << <"+
@@ -455,9 +407,8 @@ public class CProxy	implements	Runnable
 					traffic +" bytes." );
 	}
 	
-	///////////////////////////////////////////////
-	
-	public	void	LogClientData( int traffic )	{
+
+	public	void	logClientData( int traffic )	{
 		Log.Println("Cli data : "+
 					Log.getSocketInfo( m_ClientSocket ) +
 					" >> <"+
@@ -466,7 +417,9 @@ public class CProxy	implements	Runnable
 					comm.m_nServerPort+"> : " + 
 					traffic +" bytes." );
 	}
+	public Socket getSocksServer() {
+		return m_ServerSocket;
+	}
 	
-	///////////////////////////////////////////////
+	
 }
-///////////////////////////////////////////////////

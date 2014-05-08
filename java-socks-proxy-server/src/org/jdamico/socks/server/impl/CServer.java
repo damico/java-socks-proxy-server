@@ -51,20 +51,12 @@ public class CServer	implements	Runnable
 	
 	protected	int				m_nPort			= 0;
 	
-	protected	String			m_cProxyHost = null;
-	protected	int				m_nProxyPort= 0;
-	
 	public	int		getPort()		{	return	m_nPort;		}
-	public	int		getProxyPort()	{	return	m_nProxyPort;	}
-	public	String	getProxyHost()	{	return	m_cProxyHost; 	}
-	
-	
+
 	public	CServer(int listenPort, String proxyHost, int proxyPort) {
 		
 		m_lock = this;	
 		m_nPort			= listenPort;
-		m_cProxyHost	= proxyHost;
-		m_nProxyPort	= proxyPort;
 		Log.Println( "SOCKS Server Created." );
 	}
 	
@@ -155,9 +147,9 @@ public class CServer	implements	Runnable
 			try
 			{
 				Socket clientSocket = m_ListenSocket.accept();
-				clientSocket.setSoTimeout( Constants.DEFAULT_TIMEOUT );
+				clientSocket.setSoTimeout( Constants.DEFAULT_SERVER_TIMEOUT );
 				Log.Println( "Connection from : " + Log.getSocketInfo( clientSocket ) );
-				CProxy proxy = new CProxy( this, clientSocket );
+				CProxy proxy = new CProxy(clientSocket );
 				proxy.start();
 			}
 			catch( InterruptedIOException e )		{
