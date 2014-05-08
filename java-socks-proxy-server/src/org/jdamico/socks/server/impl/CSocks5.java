@@ -169,7 +169,7 @@ public class CSocks5 extends CSocks4
 	
 	public	boolean	CheckAuthentication() 
 		throws Exception	{
-		boolean	Have_NoAuthentication = false;
+		//boolean	Have_NoAuthentication = false;
 		byte	Methods_Num		= GetByte();
 		String	Methods = "";
 		
@@ -244,15 +244,15 @@ public class CSocks5 extends CSocks4
 		Log.Println( "SOCKS 5 - Reply to Client \"" + ReplyName(ReplyCode)+"\"" );
 		
 		int	pt = 0;
-		String		DN = "0.0.0.0";
-		InetAddress	IA = null;
+		//String		DN = "0.0.0.0";
+		//InetAddress	IA = null;
 			
 		byte[]	REPLY	= new byte[10];
 		byte	IP[]	= new byte[4];
 			
 		if( m_Parent.m_ServerSocket != null )	{
-			IA = m_Parent.m_ServerSocket.getInetAddress();
-			DN = IA.toString();
+			//IA = m_Parent.m_ServerSocket.getInetAddress();
+			//DN = IA.toString();
 			pt = m_Parent.m_ServerSocket.getLocalPort();
 		}
 		else	{
@@ -397,7 +397,7 @@ public class CSocks5 extends CSocks4
 	
 	private	byte[]	AddDGPhead( byte[]	Buffer )	{
 				
-		int		bl			= Buffer.length;
+		//int		bl			= Buffer.length;
 		byte	IABuf[]		= DGPack.getAddress().getAddress();
 		int		DGport		= DGPack.getPort();
 		int		HeaderLen	= 6 + IABuf.length;
@@ -424,7 +424,7 @@ public class CSocks5 extends CSocks4
 	
 	private	byte[]	ClearDGPhead( byte[] Buffer )	{
 		int	IAlen = 0;
-		int	bl	= Buffer.length;
+		//int	bl	= Buffer.length;
 		int	p	= 4;	// First byte of IP Address
 		
 		byte	AType = Buffer[3];	// IP Address Type
