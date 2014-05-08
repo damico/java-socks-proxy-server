@@ -230,19 +230,19 @@ public class ProxyHandler	implements	Runnable
 			}
 			DebugLog.getInstance().println( "Accepted SOCKS "+SOCKS_Version+" Request." );
 						
-			comm.Authenticate( SOCKS_Version );
-			comm.GetClientCommand();
+			comm.authenticate( SOCKS_Version );
+			comm.getClientCommand();
 			
-			switch ( comm.Command )	{
-			case Constants.SC_CONNECT	:	comm.Connect();
+			switch ( comm.socksCommand )	{
+			case Constants.SC_CONNECT	:	comm.connect();
 										relay();
 										break;
 			
-			case Constants.SC_BIND	:	comm.Bind();
+			case Constants.SC_BIND	:	comm.bind();
 										relay();
 										break;
 			
-			case Constants.SC_UDP		:	comm.UDP();
+			case Constants.SC_UDP		:	comm.udp();
 										break;
 			}
 		}

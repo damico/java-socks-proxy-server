@@ -7,18 +7,17 @@ import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 import org.jdamico.socks.server.commons.Constants;
 import org.jdamico.socks.server.commons.DebugLog;
+import org.jdamico.socks.server.commons.Utils;
 
-public class Socks4Impl
-{
+public class Socks4Impl implements SocksCommonInterface {
 	public	byte	SOCKS_Version = 0;
 
 	public	ProxyHandler	m_Parent	= null;
 	
-	public	byte	Command;
+	public	byte	socksCommand;
 	public	byte	DST_Port[]	= null;
 	public	byte	DST_Addr[]	= null;
 	public	byte	UserID[]	= null;
@@ -28,8 +27,8 @@ public class Socks4Impl
 
 	
 	//--- Reply Codes ---
-	protected	byte	getSuccessCode()	{ return 90; }
-	protected	byte	getFailCode()		{ return 91; }
+	public	byte	getSuccessCode()	{ return 90; }
+	public	byte	getFailCode()		{ return 91; }
 	//-------------------
 	
 	protected	InetAddress		m_ServerIP	  = null;
@@ -57,7 +56,7 @@ public class Socks4Impl
 	}
 	/////////////////////////////////////////////////////////////////
 	
-	public	String	ReplyName( byte code )	{
+	public	String	replyName( byte code )	{
 	
 		switch( code )	{
 		case 0: return "SUCCESS";
@@ -91,60 +90,20 @@ public class Socks4Impl
 	
 	/////////////////////////////////////////////////////////////////
 
-	public	void	Calculate_UserID()	{
+	public	void	calculateUserID()	{
 	
 		String	s = UID + " ";
 		UserID = s.getBytes();
 		UserID[UserID.length-1] = 0x00;
 	}
 	
-	/////////////////////////////////////////////////////////////////	
 	
-	public	int	byte2int( byte b )	{
-		int	res = b;
-		if( res < 0 ) res = (int)( 0x100 + res );
-		return	res;
-	}
-	/////////////////////////////////////////////////////////////////
 	
-	public	int	calcPort( byte Hi, byte Lo )	{
-		
-		return ( (byte2int( Hi ) << 8) | byte2int( Lo ) );	
-	}
-
-	/////////////////////////////////////////////////////////////////
-	
-	public	InetAddress	calcInetAddress( byte[] addr )	{
-		InetAddress	IA  = null;
-		String		sIA = "";		
-		
-		if( addr.length < 4 )	{
-			DebugLog.getInstance().error( "calcInetAddress() - Invalid length of IP v4 - "+addr.length+" bytes" );	
-			return null;
-		}
-		
-		// IP v4 Address Type
-		for( int i=0; i<4; i++ )	{
-			sIA += byte2int( addr[i] );
-			if( i<3 )	sIA += ".";
-		}
-		
-		try	{
-			IA = InetAddress.getByName( sIA );
-		}
-		catch( UnknownHostException e )	{
-			return null;
-		}
-		
-		return	IA; // IP Address
-	}
-	/////////////////////////////////////////////////////////////////	
-	
-	public	boolean	Calculate_Address()	{
+	public	boolean	calculateAddress()	{
 			
 		// IP v4 Address Type
-		m_ServerIP		= calcInetAddress( DST_Addr );
-		m_nServerPort	= calcPort( DST_Port[0], DST_Port[1] );
+		m_ServerIP		= Utils.getInstance().calcInetAddress( DST_Addr );
+		m_nServerPort	= Utils.getInstance().calcPort( DST_Port[0], DST_Port[1] );
 		
 		m_ClientIP		= m_Parent.m_ClientSocket.getInetAddress();
 		m_nClientPort	= m_Parent.m_ClientSocket.getPort();
@@ -153,7 +112,7 @@ public class Socks4Impl
 	}							
 	/////////////////////////////////////////////////////////////////	
 	
-	protected	byte	GetByte()
+	protected	byte	getByte()
 	{
 		byte	b;
 		try	{
@@ -166,7 +125,7 @@ public class Socks4Impl
 	}
 	/////////////////////////////////////////////////////////////
 
-	public	void	Authenticate( byte SOCKS_Ver )
+	public	void	authenticate( byte SOCKS_Ver )
 		throws	Exception	{
 	
 		SOCKS_Version = SOCKS_Ver;
@@ -174,43 +133,41 @@ public class Socks4Impl
 	
 	/////////////////////////////////////////////////////////////
 
-	public void	GetClientCommand()
-		throws Exception
-	{
+	public void	getClientCommand() throws Exception {
 		byte	b;
 				
 		// Version was get in method Authenticate()
-		Command		= GetByte();
+		socksCommand		= getByte();
 
-		DST_Port[0]	= GetByte();
-		DST_Port[1]	= GetByte();
+		DST_Port[0]	= getByte();
+		DST_Port[1]	= getByte();
 		
 		for( int i=0; i<4; i++ )	{
-			DST_Addr[i] = GetByte();
+			DST_Addr[i] = getByte();
 		}
 		
-		while( (b=GetByte()) != 0x00 )	{
+		while( (b=getByte()) != 0x00 )	{
 			UID += (char)b;
 		}
-		Calculate_UserID();
+		calculateUserID();
 		
-		if( (Command < Constants.SC_CONNECT) || (Command > Constants.SC_BIND) )	{
-			Refuse_Command( (byte)91 );
-			throw	new Exception( "Socks 4 - Unsupported Command : "+commName( Command ) );
+		if( (socksCommand < Constants.SC_CONNECT) || (socksCommand > Constants.SC_BIND) )	{
+			refuseCommand( (byte)91 );
+			throw	new Exception( "Socks 4 - Unsupported Command : "+commName( socksCommand ) );
 		}
 		
-		if( !Calculate_Address() )	{  // Gets the IP Address 
-			Refuse_Command( (byte)92 );	// Host Not Exists...
+		if( !calculateAddress() )	{  // Gets the IP Address 
+			refuseCommand( (byte)92 );	// Host Not Exists...
 			throw new Exception( "Socks 4 - Unknown Host/IP address '"+m_ServerIP.toString() );
 		}
 									
-		DebugLog.getInstance().println( "Accepted SOCKS 4 Command: \""+ commName( Command )+"\"" );
+		DebugLog.getInstance().println( "Accepted SOCKS 4 Command: \""+ commName( socksCommand )+"\"" );
 	}  // GetClientCommand()
 	/////////////////////////////////////////////////////////////
 
-	public	void	Reply_Command( byte ReplyCode )
+	public	void	replyCommand( byte ReplyCode )
 	{
-		DebugLog.getInstance().println( "Socks 4 reply: \""+ReplyName( ReplyCode)+"\"" );
+		DebugLog.getInstance().println( "Socks 4 reply: \""+replyName( ReplyCode)+"\"" );
 		
 		byte[] REPLY = new byte[8];
 		REPLY[0]= 0;
@@ -223,17 +180,16 @@ public class Socks4Impl
 		REPLY[7]= DST_Addr[3];
 			
 		m_Parent.sendToClient( REPLY );
-	} // Reply_Command()
-	/////////////////////////////////////////////////////////////
+	} 
 			
-	protected	void	Refuse_Command( byte ErrorCode )	{
-		DebugLog.getInstance().println( "Socks 4 - Refuse Command: \""+ReplyName(ErrorCode)+"\"" );
-		Reply_Command( ErrorCode );
+	protected	void	refuseCommand( byte errorCode )	{
+		DebugLog.getInstance().println( "Socks 4 - Refuse Command: \""+replyName(errorCode)+"\"" );
+		replyCommand( errorCode );
 	}	// Refuse_Command()
 
 	/////////////////////////////////////////////////////////////
 
-	protected	void	Connect() throws Exception {
+	public void	connect() throws Exception {
 
 		DebugLog.getInstance().println( "Connecting..." );
 	//	Connect to the Remote Host
@@ -241,26 +197,19 @@ public class Socks4Impl
 			m_Parent.connectToServer( m_ServerIP.getHostAddress(), m_nServerPort );
 		}
 		catch( IOException e )	{
-			Refuse_Command( getFailCode() ); // Connection Refused
+			refuseCommand( getFailCode() ); // Connection Refused
 			throw new Exception("Socks 4 - Can't connect to " +
 			DebugLog.getInstance().getSocketInfo( m_Parent.m_ServerSocket ) );
 		}
 		
 		DebugLog.getInstance().println( "Connected to "+DebugLog.getInstance().getSocketInfo( m_Parent.m_ServerSocket ) );
-		Reply_Command( getSuccessCode() );
-	}	// Connect()
+		replyCommand( getSuccessCode() );
+	}	
 	
-	/////////////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////
-	
-	public	void	BIND_Reply( byte ReplyCode, InetAddress IA, int PT )
-		throws	IOException
-	{
+	public	void	bindReply( byte ReplyCode, InetAddress IA, int PT ) throws	IOException {
 		byte	IP[] = {0,0,0,0};
 		
-		DebugLog.getInstance().println( "Reply to Client : \""+ReplyName( ReplyCode )+"\"" );
+		DebugLog.getInstance().println( "Reply to Client : \""+replyName( ReplyCode )+"\"" );
 		
 		byte[] REPLY = new byte[8];
 		if( IA != null )	IP = IA.getAddress();
@@ -287,7 +236,7 @@ public class Socks4Impl
 	//	It is IMPOSSIBLE to resolve normally the External
 	//	IP address of yout machine )-: !!!
 	/////////////////////////////////////////////////////////////
-	public	InetAddress	ResolveExternalLocalIP()	{
+	public	InetAddress	resolveExternalLocalIP()	{
 		
 		InetAddress	IP		=	null;
 		
@@ -326,7 +275,7 @@ public class Socks4Impl
 	
 	/////////////////////////////////////////////////////////////
 	
-	protected	void	Bind()	throws IOException
+	public void	bind()	throws IOException
 	{
 		ServerSocket	ssock	= null;
 		InetAddress		MyIP	= null;
@@ -334,15 +283,8 @@ public class Socks4Impl
 		
 		DebugLog.getInstance().println( "Binding..." );
 		// Resolve External IP
-		MyIP = ResolveExternalLocalIP();
+		MyIP = resolveExternalLocalIP();
 
-// It have not matter ... ask me for more...		
-/*		if( MyIP == null )	{
-			Log.error(this, "BIND()", "Can't resolve local IP");	
-			BIND_Reply( (byte)91, MyIP,MyPort );
-			return;
-		}
-*/	
 		DebugLog.getInstance().println( "Local IP : " + MyIP.toString() );
 		
 		
@@ -353,13 +295,13 @@ public class Socks4Impl
 		}
 		catch( IOException e )	{  // MyIP == null
 			DebugLog.getInstance().println( "Error in BIND() - Can't BIND at any Port" );
-			BIND_Reply( (byte)92, MyIP,MyPort );
+			bindReply( (byte)92, MyIP,MyPort );
 			ssock.close();
 			return;
 		}
 
 		DebugLog.getInstance().println( "BIND at : <"+MyIP.toString()+":"+MyPort+">" );
-		BIND_Reply( (byte)90, MyIP, MyPort );
+		bindReply( (byte)90, MyIP, MyPort );
 									 
 		Socket	socket = null;
 
@@ -394,7 +336,7 @@ public class Socks4Impl
 		m_ServerIP	= socket.getInetAddress();
 		m_nServerPort	= socket.getPort();
 		
-		BIND_Reply( (byte)90,	socket.getInetAddress(), 
+		bindReply( (byte)90,	socket.getInetAddress(), 
 								socket.getPort() );
 		
 		m_Parent.m_ServerSocket = socket;
@@ -407,11 +349,11 @@ public class Socks4Impl
 	}// BIND...
 	/////////////////////////////////////////////////////////////
 
-	public	void	UDP() throws IOException
+	public	void	udp() throws IOException
 	{
 		DebugLog.getInstance().println( "Error - Socks 4 don't support UDP Association!" );
 		DebugLog.getInstance().println( "Check your Software please..." );
-		Refuse_Command( (byte)91 );	// SOCKS4 don't support UDP
+		refuseCommand( (byte)91 );	// SOCKS4 don't support UDP
 	}
 	/////////////////////////////////////////////////////////////
 }

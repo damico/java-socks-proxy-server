@@ -25,4 +25,6 @@ public interface Constants {
 	public static	final	byte	SC_CONNECT	= 0x01;
 	public static	final	byte	SC_BIND		= 0x02;
 	public static	final	byte	SC_UDP		= 0x03;	
+	
+	public static	final	int		MAX_ADDR_LEN	= 255;
 }

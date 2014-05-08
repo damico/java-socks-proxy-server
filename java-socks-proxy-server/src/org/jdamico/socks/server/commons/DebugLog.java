@@ -4,9 +4,8 @@ package	org.jdamico.socks.server.commons;
 
 
 
-import	java.net.Socket;
-import	java.net.DatagramPacket;
-import	java.net.InetAddress;
+import java.net.DatagramPacket;
+import java.net.Socket;
 
 import org.jdamico.socks.server.StartProxy;
 
@@ -49,21 +48,13 @@ public class DebugLog
 		e.printStackTrace();
 	}
 	
-	/////////////////////////////////////////////////
-	
-	public	String	iP2Str( InetAddress IP )	{
-		if( IP == null )	return "NA/NA";
-		
-		return	IP.getHostName()+"/"+IP.getHostAddress();
-	}
-	
-	/////////////////////////////////////////////////
+
 	
 	public	String	getSocketInfo( Socket sock )	{
 	
 		if( sock == null )	return "<NA/NA:0>";
 		
-		return	"<"+iP2Str( sock.getInetAddress() )+":"+
+		return	"<"+Utils.getInstance().iP2Str( sock.getInetAddress() )+":"+
 				sock.getPort() + ">";
 	}
 	
@@ -73,7 +64,7 @@ public class DebugLog
 	
 		if( DGP == null )	return "<NA/NA:0>";
 		
-		return	"<"+iP2Str( DGP.getAddress() )+":"+
+		return	"<"+Utils.getInstance().iP2Str( DGP.getAddress() )+":"+
 				DGP.getPort() + ">";
 	}
 	
