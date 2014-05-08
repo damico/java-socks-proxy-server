@@ -37,7 +37,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.jdamico.socks.server.commons.Constants;
-import org.jdamico.socks.server.commons.Log;
+import org.jdamico.socks.server.commons.DebugLog;
 
 ///////////////////////////////////////////////
 
@@ -98,7 +98,7 @@ public class CSocks5 extends CSocks4
 					break;
 			// Version IP DOMAIN NAME
 		case 0x03:	if( addr[0] <= 0  )	{
-						Log.Error( "SOCKS 5 - calcInetAddress() : BAD IP in command - size : " + addr[0] );
+						DebugLog.Error( "SOCKS 5 - calcInetAddress() : BAD IP in command - size : " + addr[0] );
 						return null;	
 					}
 					String		sIA= "";
@@ -154,13 +154,13 @@ public class CSocks5 extends CSocks4
 	
 	public	void	Refuse_Authentication( String msg )	{
 
-		Log.Println( "SOCKS 5 - Refuse Authentication: '"+msg+"'" );
+		DebugLog.Println( "SOCKS 5 - Refuse Authentication: '"+msg+"'" );
 		m_Parent.sendToClient( Constants.SRE_Refuse );
 	}
 	/////////////////////////////////////////////////////////////
 	
 	public	void	Accept_Authentication()	{
-		Log.Println( "SOCKS 5 - Accepts Auth. method 'NO_AUTH'" );
+		DebugLog.Println( "SOCKS 5 - Accepts Auth. method 'NO_AUTH'" );
 		byte[] tSRE_Accept = Constants.SRE_Accept;
 		tSRE_Accept[0] = SOCKS_Version;
 		m_Parent.sendToClient( tSRE_Accept );
@@ -205,7 +205,7 @@ public class CSocks5 extends CSocks4
 		DST_Port[1]	= GetByte();
 		
 		if( SOCKS_Version != Constants.SOCKS5_Version )	{
-			Log.Println( "SOCKS 5 - Incorrect SOCKS Version of Command: "+
+			DebugLog.Println( "SOCKS 5 - Incorrect SOCKS Version of Command: "+
 						 SOCKS_Version );
 			Refuse_Command( (byte)0xFF );
 			throw new Exception("Incorrect SOCKS Version of Command: "+ 
@@ -213,19 +213,19 @@ public class CSocks5 extends CSocks4
 		}
 		
 		if( (Command < Constants.SC_CONNECT) || (Command > SC_UDP) )	{
-			Log.Error( "SOCKS 5 - GetClientCommand() - Unsupported Command : \"" + commName( Command )+"\"" );
+			DebugLog.Error( "SOCKS 5 - GetClientCommand() - Unsupported Command : \"" + commName( Command )+"\"" );
 			Refuse_Command( (byte)0x07 );
 			throw new Exception("SOCKS 5 - Unsupported Command: \"" + Command +"\"" );
 		}
 		
 		if( ATYP == 0x04 )	{
-			Log.Error( "SOCKS 5 - GetClientCommand() - Unsupported Address Type - IP v6" );
+			DebugLog.Error( "SOCKS 5 - GetClientCommand() - Unsupported Address Type - IP v6" );
 			Refuse_Command( (byte)0x08 );
 			throw new Exception( "Unsupported Address Type - IP v6" );
 		}
 		
 		if( (ATYP >= 0x04) || (ATYP <=0) )	{
-			Log.Error( "SOCKS 5 - GetClientCommand() - Unsupported Address Type: " + ATYP );
+			DebugLog.Error( "SOCKS 5 - GetClientCommand() - Unsupported Address Type: " + ATYP );
 			Refuse_Command( (byte)0x08 );
 			throw new Exception( "SOCKS 5 - Unsupported Address Type: " + ATYP );
 		}
@@ -235,13 +235,13 @@ public class CSocks5 extends CSocks4
 			throw new Exception( "SOCKS 5 - Unknown Host/IP address '" + m_ServerIP.toString()+"'" );
 		}
 		
-		Log.Println( "SOCKS 5 - Accepted SOCKS5 Command: \""+commName(Command)+"\"" );
+		DebugLog.Println( "SOCKS 5 - Accepted SOCKS5 Command: \""+commName(Command)+"\"" );
 	}  // GetClientCommand()
 
 	/////////////////////////////////////////////////////////////
 	
 	public	void	Reply_Command( byte ReplyCode )	{
-		Log.Println( "SOCKS 5 - Reply to Client \"" + ReplyName(ReplyCode)+"\"" );
+		DebugLog.Println( "SOCKS 5 - Reply to Client \"" + ReplyName(ReplyCode)+"\"" );
 		
 		int	pt = 0;
 		//String		DN = "0.0.0.0";
@@ -284,7 +284,7 @@ public class CSocks5 extends CSocks4
 	{
 		byte	IP[] = {0,0,0,0};
 		
-		Log.Println( "BIND Reply to Client \"" + ReplyName( ReplyCode )+"\"" );
+		DebugLog.Println( "BIND Reply to Client \"" + ReplyName( ReplyCode )+"\"" );
 		
 		byte[]	REPLY = new byte[10];
 		if( IA != null )	IP = IA.getAddress();
@@ -304,7 +304,7 @@ public class CSocks5 extends CSocks4
 			m_Parent.sendToClient( REPLY );
 		}
 		else	{
-			Log.Println( "BIND - Closed Client Connection" );
+			DebugLog.Println( "BIND - Closed Client Connection" );
 		}
 	} // BIND_Reply()
 
@@ -325,10 +325,10 @@ public class CSocks5 extends CSocks4
 	public	void	UDP_Reply( byte ReplyCode, InetAddress IA, int PT )
 		throws	IOException	{
 		
-		Log.Println( "Reply to Client \"" + ReplyName( ReplyCode )+"\"" );
+		DebugLog.Println( "Reply to Client \"" + ReplyName( ReplyCode )+"\"" );
 		
 		if( m_Parent.m_ClientSocket == null )	{
-			Log.Println( "Error in UDP_Reply() - Client socket is NULL" );	
+			DebugLog.Println( "Error in UDP_Reply() - Client socket is NULL" );	
 		}
 		byte[]	IP = IA.getAddress();
 			 
@@ -374,14 +374,14 @@ public class CSocks5 extends CSocks4
 		// IP/Port where Server will listen
 		UDP_Reply( (byte)0, MyIP, MyPort );
 		
-		Log.Println( "UDP Listen at: <"+MyIP.toString()+":"+MyPort+">" );
+		DebugLog.Println( "UDP Listen at: <"+MyIP.toString()+":"+MyPort+">" );
 
 		while( m_Parent.checkClientData() >= 0 )
 		{
 			ProcessUDP();
 			Thread.yield();
 		}
-		Log.Println( "UDP - Closed TCP Master of UDP Association" );
+		DebugLog.Println( "UDP - Closed TCP Master of UDP Association" );
 	} // UDP ...
 	/////////////////////////////////////////////////////////////
 	
@@ -431,7 +431,7 @@ public class CSocks5 extends CSocks4
 		switch( AType )	{
 		case	0x01:	IAlen = 4;   break;
 		case	0x03:	IAlen = Buffer[p]+1; break; // One for Size Byte
-		default		:	Log.Println( "Error in ClearDGPhead() - Invalid Destination IP Addres type " + AType );
+		default		:	DebugLog.Println( "Error in ClearDGPhead() - Invalid Destination IP Addres type " + AType );
 						return null;
 		}
 
@@ -443,7 +443,7 @@ public class CSocks5 extends CSocks4
 		UDP_port = calcPort( Buffer[p++], Buffer[p++] );
 		
 		if( UDP_IA == null )	{
-			Log.Println( "Error in ClearDGPHead() - Invalid UDP dest IP address: NULL" );
+			DebugLog.Println( "Error in ClearDGPHead() - Invalid UDP dest IP address: NULL" );
 			return null;
 		}
 		
@@ -471,7 +471,7 @@ public class CSocks5 extends CSocks4
 			DGSocket.send( DGP );
 		}
 		catch( IOException e )	{
-			Log.Println( "Error in ProcessUDPClient() - Failed to Send DGP to "+ LogString );
+			DebugLog.Println( "Error in ProcessUDPClient() - Failed to Send DGP to "+ LogString );
 			return;
 		}
 	}
@@ -488,7 +488,7 @@ public class CSocks5 extends CSocks4
 			return;	// Time Out		
 		}
 		catch( IOException e )	{
-			Log.Println( "Error in ProcessUDP() - "+ e.toString() );
+			DebugLog.Println( "Error in ProcessUDP() - "+ e.toString() );
 			return;
 		}
 		
@@ -505,7 +505,7 @@ public class CSocks5 extends CSocks4
 			Init_UDP_InOut();	// Clean DGPack & Buffer
 		}
 		catch( IOException e )	{
-			Log.Println( "IOError in Init_UDP_IO() - "+ e.toString() );
+			DebugLog.Println( "IOError in Init_UDP_IO() - "+ e.toString() );
 			m_Parent.close();
 		}
 	} // ProcessUDP()...
@@ -526,11 +526,11 @@ public class CSocks5 extends CSocks4
 		if( Buf.length <= 0 )	return;				
 
 		if( UDP_IA == null )	{
-			Log.Println( "Error in ProcessUDPClient() - Invalid Destination IP - NULL" );
+			DebugLog.Println( "Error in ProcessUDPClient() - Invalid Destination IP - NULL" );
 			return;
 		}
 		if( UDP_port == 0 )	{
-			Log.Println( "Error in ProcessUDPClient() - Invalid Destination Port - 0" );
+			DebugLog.Println( "Error in ProcessUDPClient() - Invalid Destination Port - 0" );
 			return;
 		}
 		
@@ -539,8 +539,8 @@ public class CSocks5 extends CSocks4
 			m_nServerPort	= UDP_port;
 		}
 		
-		Log.Println( "Datagram : "+ Buf.length + " bytes : "+Log.getSocketInfo(	DGPack )+
-					 " >> <" + Log.IP2Str( m_ServerIP )+":"+m_nServerPort+">" );
+		DebugLog.Println( "Datagram : "+ Buf.length + " bytes : "+DebugLog.getSocketInfo(	DGPack )+
+					 " >> <" + DebugLog.IP2Str( m_ServerIP )+":"+m_nServerPort+">" );
 		
 		DatagramPacket	DGPSend = new DatagramPacket( Buf, Buf.length,
 													  UDP_IA, UDP_port );
@@ -552,9 +552,9 @@ public class CSocks5 extends CSocks4
 	
 	public	void	ProcessUDPRemote()	{
 
-		Log.Println( "Datagram : "+ DGPack.getLength()+" bytes : "+
-					 "<"+Log.IP2Str( m_ClientIP )+":"+m_nClientPort+"> << " +
-					 Log.getSocketInfo( DGPack ) );
+		DebugLog.Println( "Datagram : "+ DGPack.getLength()+" bytes : "+
+					 "<"+DebugLog.IP2Str( m_ClientIP )+":"+m_nClientPort+"> << " +
+					 DebugLog.getSocketInfo( DGPack ) );
 		
 		// This Method must be CALL only from <ProcessUDP()>
 		// ProcessUDP() Reads a Datagram packet <DGPack>

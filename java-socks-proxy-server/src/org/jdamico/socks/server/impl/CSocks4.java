@@ -35,7 +35,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import org.jdamico.socks.server.commons.Constants;
-import org.jdamico.socks.server.commons.Log;
+import org.jdamico.socks.server.commons.DebugLog;
 
 public class CSocks4
 {
@@ -144,7 +144,7 @@ public class CSocks4
 		String		sIA = "";		
 		
 		if( addr.length < 4 )	{
-			Log.Error( "calcInetAddress() - Invalid length of IP v4 - "+addr.length+" bytes" );	
+			DebugLog.Error( "calcInetAddress() - Invalid length of IP v4 - "+addr.length+" bytes" );	
 			return null;
 		}
 		
@@ -229,13 +229,13 @@ public class CSocks4
 			throw new Exception( "Socks 4 - Unknown Host/IP address '"+m_ServerIP.toString() );
 		}
 									
-		Log.Println( "Accepted SOCKS 4 Command: \""+ commName( Command )+"\"" );
+		DebugLog.Println( "Accepted SOCKS 4 Command: \""+ commName( Command )+"\"" );
 	}  // GetClientCommand()
 	/////////////////////////////////////////////////////////////
 
 	public	void	Reply_Command( byte ReplyCode )
 	{
-		Log.Println( "Socks 4 reply: \""+ReplyName( ReplyCode)+"\"" );
+		DebugLog.Println( "Socks 4 reply: \""+ReplyName( ReplyCode)+"\"" );
 		
 		byte[] REPLY = new byte[8];
 		REPLY[0]= 0;
@@ -252,7 +252,7 @@ public class CSocks4
 	/////////////////////////////////////////////////////////////
 			
 	protected	void	Refuse_Command( byte ErrorCode )	{
-		Log.Println( "Socks 4 - Refuse Command: \""+ReplyName(ErrorCode)+"\"" );
+		DebugLog.Println( "Socks 4 - Refuse Command: \""+ReplyName(ErrorCode)+"\"" );
 		Reply_Command( ErrorCode );
 	}	// Refuse_Command()
 
@@ -260,7 +260,7 @@ public class CSocks4
 
 	protected	void	Connect() throws Exception {
 
-		Log.Println( "Connecting..." );
+		DebugLog.Println( "Connecting..." );
 	//	Connect to the Remote Host
 		try	{
 			m_Parent.connectToServer( m_ServerIP.getHostAddress(), m_nServerPort );
@@ -268,10 +268,10 @@ public class CSocks4
 		catch( IOException e )	{
 			Refuse_Command( getFailCode() ); // Connection Refused
 			throw new Exception("Socks 4 - Can't connect to " +
-			Log.getSocketInfo( m_Parent.m_ServerSocket ) );
+			DebugLog.getSocketInfo( m_Parent.m_ServerSocket ) );
 		}
 		
-		Log.Println( "Connected to "+Log.getSocketInfo( m_Parent.m_ServerSocket ) );
+		DebugLog.Println( "Connected to "+DebugLog.getSocketInfo( m_Parent.m_ServerSocket ) );
 		Reply_Command( getSuccessCode() );
 	}	// Connect()
 	
@@ -285,7 +285,7 @@ public class CSocks4
 	{
 		byte	IP[] = {0,0,0,0};
 		
-		Log.Println( "Reply to Client : \""+ReplyName( ReplyCode )+"\"" );
+		DebugLog.Println( "Reply to Client : \""+ReplyName( ReplyCode )+"\"" );
 		
 		byte[] REPLY = new byte[8];
 		if( IA != null )	IP = IA.getAddress();
@@ -303,7 +303,7 @@ public class CSocks4
 			m_Parent.sendToClient( REPLY );
 		}
 		else	{
-			Log.Println( "Closed BIND Client Connection" );
+			DebugLog.Println( "Closed BIND Client Connection" );
 		}
 	} // Reply_Command()
 	
@@ -325,7 +325,7 @@ public class CSocks4
 				return m_ExtLocalIP;
 			}
 			catch( IOException e )	{
-				Log.Println( "WARNING !!! THE LOCAL IP ADDRESS WAS CHANGED !" );
+				DebugLog.Println( "WARNING !!! THE LOCAL IP ADDRESS WAS CHANGED !" );
 			}
 		}
 		
@@ -341,7 +341,7 @@ public class CSocks4
 				break;
     		}
 			catch( Exception e )	{  // IP == null
-				Log.Println( "Error in BIND() - BIND reip Failed at "+i );
+				DebugLog.Println( "Error in BIND() - BIND reip Failed at "+i );
 			}
 		}
 		
@@ -357,7 +357,7 @@ public class CSocks4
 		InetAddress		MyIP	= null;
 		int				MyPort	= 0;
 		
-		Log.Println( "Binding..." );
+		DebugLog.Println( "Binding..." );
 		// Resolve External IP
 		MyIP = ResolveExternalLocalIP();
 
@@ -368,7 +368,7 @@ public class CSocks4
 			return;
 		}
 */	
-		Log.Println( "Local IP : " + MyIP.toString() );
+		DebugLog.Println( "Local IP : " + MyIP.toString() );
 		
 		
 		try	{	
@@ -377,13 +377,13 @@ public class CSocks4
 			MyPort	= ssock.getLocalPort();
 		}
 		catch( IOException e )	{  // MyIP == null
-			Log.Println( "Error in BIND() - Can't BIND at any Port" );
+			DebugLog.Println( "Error in BIND() - Can't BIND at any Port" );
 			BIND_Reply( (byte)92, MyIP,MyPort );
 			ssock.close();
 			return;
 		}
 
-		Log.Println( "BIND at : <"+MyIP.toString()+":"+MyPort+">" );
+		DebugLog.Println( "BIND at : <"+MyIP.toString()+":"+MyPort+">" );
 		BIND_Reply( (byte)90, MyIP, MyPort );
 									 
 		Socket	socket = null;
@@ -391,7 +391,7 @@ public class CSocks4
 		while( socket == null )
 		{
 			if( m_Parent.checkClientData() >= 0 ) {
-				Log.Println( "BIND - Client connection closed" );
+				DebugLog.Println( "BIND - Client connection closed" );
 				ssock.close();
 				return;
 			}
@@ -425,7 +425,7 @@ public class CSocks4
 		m_Parent.m_ServerSocket = socket;
 		m_Parent.prepareServer();
 		
-		Log.Println( "BIND Connection from "+Log.getSocketInfo( m_Parent.m_ServerSocket ) );
+		DebugLog.Println( "BIND Connection from "+DebugLog.getSocketInfo( m_Parent.m_ServerSocket ) );
 		ssock.close();
 		
 		
@@ -434,8 +434,8 @@ public class CSocks4
 
 	public	void	UDP() throws IOException
 	{
-		Log.Println( "Error - Socks 4 don't support UDP Association!" );
-		Log.Println( "Check your Software please..." );
+		DebugLog.Println( "Error - Socks 4 don't support UDP Association!" );
+		DebugLog.Println( "Check your Software please..." );
 		Refuse_Command( (byte)91 );	// SOCKS4 don't support UDP
 	}
 	/////////////////////////////////////////////////////////////

@@ -13,7 +13,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import org.jdamico.socks.server.commons.Constants;
-import org.jdamico.socks.server.commons.Log;
+import org.jdamico.socks.server.commons.DebugLog;
 
 
 public class CProxy	implements	Runnable
@@ -42,13 +42,13 @@ public class CProxy	implements	Runnable
 				m_ClientSocket.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
 			}
 			catch( SocketException e )	{
-				Log.Error( "Socket Exception during seting Timeout." );
+				DebugLog.Error( "Socket Exception during seting Timeout." );
 			}
 		}
 		
 		m_Buffer = new byte[ Constants.DEFAULT_BUF_SIZE ];
 		
-		Log.Println( "Proxy Created." );
+		DebugLog.Println( "Proxy Created." );
 	}
 		
 	public	void setLock( Object lock ) {
@@ -59,7 +59,7 @@ public class CProxy	implements	Runnable
 	{
 		m_TheThread = new Thread( this );
 		m_TheThread.start();
-		Log.Println( "Proxy Started." );
+		DebugLog.Println( "Proxy Started." );
 	}
 
 	public	void	stop()	{
@@ -74,7 +74,7 @@ public class CProxy	implements	Runnable
 		m_ClientSocket = null;
 		m_ServerSocket  = null;
 		
-		Log.Println( "Proxy Stopped." );
+		DebugLog.Println( "Proxy Stopped." );
 		
 		m_TheThread.interrupt();
 	}
@@ -84,7 +84,7 @@ public class CProxy	implements	Runnable
 		setLock( this );
 		
 		if( !prepareClient() )	{
-			Log.Error( "Proxy - client socket is null !" );
+			DebugLog.Error( "Proxy - client socket is null !" );
 			return;
 		}
 
@@ -130,7 +130,7 @@ public class CProxy	implements	Runnable
 		m_ServerSocket = null;
 		m_ClientSocket = null;
 		
-		Log.Println( "Proxy Closed." );
+		DebugLog.Println( "Proxy Closed." );
 	}
 	
 	public	void sendToClient( byte[] buffer )	{
@@ -146,7 +146,7 @@ public class CProxy	implements	Runnable
 			m_ClientOutput.flush();
 		}
 		catch( IOException e )	{
-			Log.Error( "Sending data to client" );
+			DebugLog.Error( "Sending data to client" );
 		}
 	}
 	
@@ -163,7 +163,7 @@ public class CProxy	implements	Runnable
 			m_ServerOutput.flush();
 		}
 		catch( IOException e )	{
-			Log.Error( "Sending data to server" );
+			DebugLog.Error( "Sending data to server" );
 		}
 	}
 	
@@ -177,14 +177,14 @@ public class CProxy	implements	Runnable
 
 		if( server.equals("") )	{
 			close();
-			Log.Error( "Invalid Remote Host Name - Empty String !!!" );
+			DebugLog.Error( "Invalid Remote Host Name - Empty String !!!" );
 			return;
 		}
 		
 		m_ServerSocket = new Socket( server, port );
 		m_ServerSocket.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
 		
-		Log.Println( "Connected to "+Log.getSocketInfo( m_ServerSocket ) );
+		DebugLog.Println( "Connected to "+DebugLog.getSocketInfo( m_ServerSocket ) );
 		prepareServer();
 	}
 
@@ -204,8 +204,8 @@ public class CProxy	implements	Runnable
 			m_ClientOutput= m_ClientSocket.getOutputStream();
 		}
 		catch( IOException e )	{
-			Log.Error( "Proxy - can't get I/O streams!" );
-			Log.Error( e );
+			DebugLog.Error( "Proxy - can't get I/O streams!" );
+			DebugLog.Error( e );
 			return	false;
 		}
 		return	true;
@@ -225,10 +225,10 @@ public class CProxy	implements	Runnable
 											break;
 			case Constants.SOCKS5_Version:	comm = new CSocks5( this );	
 											break;
-			default:	Log.Error( "Invalid SOKCS version : "+SOCKS_Version );
+			default:	DebugLog.Error( "Invalid SOKCS version : "+SOCKS_Version );
 						return;
 			}
-			Log.Println( "Accepted SOCKS "+SOCKS_Version+" Request." );
+			DebugLog.Println( "Accepted SOCKS "+SOCKS_Version+" Request." );
 						
 			comm.Authenticate( SOCKS_Version );
 			comm.GetClientCommand();
@@ -247,7 +247,7 @@ public class CProxy	implements	Runnable
 			}
 		}
 		catch( Exception   e )	{
-			Log.Error( e );
+			DebugLog.Error( e );
 		}
 	} 
 
@@ -318,7 +318,7 @@ public class CProxy	implements	Runnable
 				return	0;
 			}
 			catch( IOException e )		{
-				Log.Println( "Client connection Closed!" );
+				DebugLog.Println( "Client connection Closed!" );
 				close();	//	Close the server on this exception
 				return -1;
 			}
@@ -345,7 +345,7 @@ public class CProxy	implements	Runnable
 				return	0;
 			}
 			catch( IOException e )		{
-				Log.Println( "Server connection Closed!" );
+				DebugLog.Println( "Server connection Closed!" );
 				close();	//	Close the server on this exception
 				return -1;
 			}
@@ -357,8 +357,8 @@ public class CProxy	implements	Runnable
 	}
 
 	public	void	logServerData( int traffic )	{
-		Log.Println("Srv data : "+
-					Log.getSocketInfo( m_ClientSocket ) +
+		DebugLog.Println("Srv data : "+
+					DebugLog.getSocketInfo( m_ClientSocket ) +
 					" << <"+
 					comm.m_ServerIP.getHostName()+"/"+
 					comm.m_ServerIP.getHostAddress()+":"+
@@ -368,8 +368,8 @@ public class CProxy	implements	Runnable
 	
 
 	public	void	logClientData( int traffic )	{
-		Log.Println("Cli data : "+
-					Log.getSocketInfo( m_ClientSocket ) +
+		DebugLog.Println("Cli data : "+
+					DebugLog.getSocketInfo( m_ClientSocket ) +
 					" >> <"+
 					comm.m_ServerIP.getHostName()+"/"+
 					comm.m_ServerIP.getHostAddress()+":"+

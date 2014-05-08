@@ -10,7 +10,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import org.jdamico.socks.server.commons.Constants;
-import org.jdamico.socks.server.commons.Log;
+import org.jdamico.socks.server.commons.DebugLog;
 
 
 
@@ -32,7 +32,7 @@ public class CServer	implements	Runnable
 		
 		m_lock = this;	
 		m_nPort			= listenPort;
-		Log.Println( "SOCKS Server Created." );
+		DebugLog.Println( "SOCKS Server Created." );
 	}
 	
 	public	void setLock( Object lock ) {
@@ -43,12 +43,12 @@ public class CServer	implements	Runnable
 	public	void start() {
 		m_TheThread = new Thread( this );
 		m_TheThread.start();
-		Log.Println( "SOCKS Server Started." );
+		DebugLog.Println( "SOCKS Server Started." );
 	}
 
 	public	void	stop()	{
 		
-		Log.Println( "SOCKS Server Stopped." );
+		DebugLog.Println( "SOCKS Server Stopped." );
 		m_TheThread.interrupt();
 	}
 	
@@ -70,7 +70,7 @@ public class CServer	implements	Runnable
 		}
 		m_ListenSocket = null;
 		
-		Log.Println( "SOCKS Server Closed." );
+		DebugLog.Println( "SOCKS Server Closed." );
 	}
 	
 	public	boolean	isActive()	{
@@ -87,7 +87,7 @@ public class CServer	implements	Runnable
 			if( m_nPort == 0 )	{
 				m_nPort = m_ListenSocket.getLocalPort();
 			}
-			Log.Println( "SOCKS Server Listen at Port : " + m_nPort );
+			DebugLog.Println( "SOCKS Server Listen at Port : " + m_nPort );
 		}
 	}
 	
@@ -98,12 +98,12 @@ public class CServer	implements	Runnable
 			prepareToListen();
 		}
 		catch( java.net.BindException e )	{
-			Log.Error( "The Port "+m_nPort+" is in use !" );
-			Log.Error( e );
+			DebugLog.Error( "The Port "+m_nPort+" is in use !" );
+			DebugLog.Error( e );
 			return;
 		}
 		catch( IOException e )	{
-			Log.Error( "IO Error Binding at port : "+m_nPort );
+			DebugLog.Error( "IO Error Binding at port : "+m_nPort );
 			return;
 		}
 
@@ -123,7 +123,7 @@ public class CServer	implements	Runnable
 			{
 				Socket clientSocket = m_ListenSocket.accept();
 				clientSocket.setSoTimeout( Constants.DEFAULT_SERVER_TIMEOUT );
-				Log.Println( "Connection from : " + Log.getSocketInfo( clientSocket ) );
+				DebugLog.Println( "Connection from : " + DebugLog.getSocketInfo( clientSocket ) );
 				CProxy proxy = new CProxy(clientSocket );
 				proxy.start();
 			}
@@ -131,7 +131,7 @@ public class CServer	implements	Runnable
 			//	This exception is thrown when accept timeout is expired
 			}
 			catch( Exception e )	{
-				Log.Error( e );
+				DebugLog.Error( e );
 			}
 		}	// synchronized
 	}

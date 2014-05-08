@@ -35,7 +35,7 @@ import	java.net.InetAddress;
 
 ///////////////////////////////////////////////
 
-public class Log
+public class DebugLog
 {
 
 	public	static	final	String	EOL	= "\r\n";
