@@ -37,11 +37,11 @@ import java.net.UnknownHostException;
 import org.jdamico.socks.server.commons.Constants;
 import org.jdamico.socks.server.commons.DebugLog;
 
-public class CSocks4
+public class Socks4Impl
 {
 	public	byte	SOCKS_Version = 0;
 
-	public	CProxy	m_Parent	= null;
+	public	ProxyHandler	m_Parent	= null;
 	
 	public	byte	Command;
 	public	byte	DST_Port[]	= null;
@@ -106,7 +106,7 @@ public class CSocks4
 	}
 	/////////////////////////////////////////////////////////////////
 
-	public	CSocks4( CProxy Parent )	{
+	public	Socks4Impl( ProxyHandler Parent )	{
 
 		m_Parent = Parent;
 		

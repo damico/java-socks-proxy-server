@@ -16,7 +16,7 @@ import org.jdamico.socks.server.commons.Constants;
 import org.jdamico.socks.server.commons.DebugLog;
 
 
-public class CProxy	implements	Runnable
+public class ProxyHandler	implements	Runnable
 {
 	protected	Object	m_lock;
 	
@@ -34,7 +34,7 @@ public class CProxy	implements	Runnable
 	public	InputStream		m_ServerInput	= null;
 	public	OutputStream	m_ServerOutput	= null;
 	
-	public	CProxy(Socket clientSocket) {	
+	public	ProxyHandler(Socket clientSocket) {	
 		m_lock = this;
 		m_ClientSocket = clientSocket;
 		if( m_ClientSocket != null )	{
@@ -213,7 +213,7 @@ public class CProxy	implements	Runnable
 	
 	
 
-	CSocks4	comm = null;
+	Socks4Impl	comm = null;
 	
 	public	void processRelay()	{
 		
@@ -221,9 +221,9 @@ public class CProxy	implements	Runnable
 			byte SOCKS_Version	= getByteFromClient();
 			
 			switch( SOCKS_Version )	{
-			case Constants.SOCKS4_Version:	comm = new CSocks4( this );
+			case Constants.SOCKS4_Version:	comm = new Socks4Impl( this );
 											break;
-			case Constants.SOCKS5_Version:	comm = new CSocks5( this );	
+			case Constants.SOCKS5_Version:	comm = new Socks5Impl( this );	
 											break;
 			default:	DebugLog.Error( "Invalid SOKCS version : "+SOCKS_Version );
 						return;

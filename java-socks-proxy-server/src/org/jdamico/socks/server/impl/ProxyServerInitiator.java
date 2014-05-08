@@ -14,7 +14,7 @@ import org.jdamico.socks.server.commons.DebugLog;
 
 
 
-public class CServer	implements	Runnable
+public class ProxyServerInitiator	implements	Runnable
 {
 	
 	
@@ -28,7 +28,7 @@ public class CServer	implements	Runnable
 	
 	public	int		getPort()		{	return	m_nPort;		}
 
-	public	CServer(int listenPort, String proxyHost, int proxyPort) {
+	public	ProxyServerInitiator(int listenPort, String proxyHost, int proxyPort) {
 		
 		m_lock = this;	
 		m_nPort			= listenPort;
@@ -124,7 +124,7 @@ public class CServer	implements	Runnable
 				Socket clientSocket = m_ListenSocket.accept();
 				clientSocket.setSoTimeout( Constants.DEFAULT_SERVER_TIMEOUT );
 				DebugLog.Println( "Connection from : " + DebugLog.getSocketInfo( clientSocket ) );
-				CProxy proxy = new CProxy(clientSocket );
+				ProxyHandler proxy = new ProxyHandler(clientSocket );
 				proxy.start();
 			}
 			catch( InterruptedIOException e )		{

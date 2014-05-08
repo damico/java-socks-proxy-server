@@ -41,7 +41,7 @@ import org.jdamico.socks.server.commons.DebugLog;
 
 ///////////////////////////////////////////////
 
-public class CSocks5 extends CSocks4
+public class Socks5Impl extends Socks4Impl
 {
 	
 	
@@ -80,7 +80,7 @@ public class CSocks5 extends CSocks4
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
 	
-	public	CSocks5( CProxy Parent )	{
+	public	Socks5Impl( ProxyHandler Parent )	{
 		
 		super( Parent );
 		
