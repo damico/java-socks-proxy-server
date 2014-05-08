@@ -42,13 +42,13 @@ public class ProxyHandler	implements	Runnable
 				m_ClientSocket.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
 			}
 			catch( SocketException e )	{
-				DebugLog.Error( "Socket Exception during seting Timeout." );
+				DebugLog.getInstance().error( "Socket Exception during seting Timeout." );
 			}
 		}
 		
 		m_Buffer = new byte[ Constants.DEFAULT_BUF_SIZE ];
 		
-		DebugLog.Println( "Proxy Created." );
+		DebugLog.getInstance().println( "Proxy Created." );
 	}
 		
 	public	void setLock( Object lock ) {
@@ -59,7 +59,7 @@ public class ProxyHandler	implements	Runnable
 	{
 		m_TheThread = new Thread( this );
 		m_TheThread.start();
-		DebugLog.Println( "Proxy Started." );
+		DebugLog.getInstance().println( "Proxy Started." );
 	}
 
 	public	void	stop()	{
@@ -74,7 +74,7 @@ public class ProxyHandler	implements	Runnable
 		m_ClientSocket = null;
 		m_ServerSocket  = null;
 		
-		DebugLog.Println( "Proxy Stopped." );
+		DebugLog.getInstance().println( "Proxy Stopped." );
 		
 		m_TheThread.interrupt();
 	}
@@ -84,7 +84,7 @@ public class ProxyHandler	implements	Runnable
 		setLock( this );
 		
 		if( !prepareClient() )	{
-			DebugLog.Error( "Proxy - client socket is null !" );
+			DebugLog.getInstance().error( "Proxy - client socket is null !" );
 			return;
 		}
 
@@ -130,7 +130,7 @@ public class ProxyHandler	implements	Runnable
 		m_ServerSocket = null;
 		m_ClientSocket = null;
 		
-		DebugLog.Println( "Proxy Closed." );
+		DebugLog.getInstance().println( "Proxy Closed." );
 	}
 	
 	public	void sendToClient( byte[] buffer )	{
@@ -146,7 +146,7 @@ public class ProxyHandler	implements	Runnable
 			m_ClientOutput.flush();
 		}
 		catch( IOException e )	{
-			DebugLog.Error( "Sending data to client" );
+			DebugLog.getInstance().error( "Sending data to client" );
 		}
 	}
 	
@@ -163,7 +163,7 @@ public class ProxyHandler	implements	Runnable
 			m_ServerOutput.flush();
 		}
 		catch( IOException e )	{
-			DebugLog.Error( "Sending data to server" );
+			DebugLog.getInstance().error( "Sending data to server" );
 		}
 	}
 	
@@ -177,14 +177,14 @@ public class ProxyHandler	implements	Runnable
 
 		if( server.equals("") )	{
 			close();
-			DebugLog.Error( "Invalid Remote Host Name - Empty String !!!" );
+			DebugLog.getInstance().error( "Invalid Remote Host Name - Empty String !!!" );
 			return;
 		}
 		
 		m_ServerSocket = new Socket( server, port );
 		m_ServerSocket.setSoTimeout( Constants.DEFAULT_PROXY_TIMEOUT );
 		
-		DebugLog.Println( "Connected to "+DebugLog.getSocketInfo( m_ServerSocket ) );
+		DebugLog.getInstance().println( "Connected to "+DebugLog.getInstance().getSocketInfo( m_ServerSocket ) );
 		prepareServer();
 	}
 
@@ -204,8 +204,8 @@ public class ProxyHandler	implements	Runnable
 			m_ClientOutput= m_ClientSocket.getOutputStream();
 		}
 		catch( IOException e )	{
-			DebugLog.Error( "Proxy - can't get I/O streams!" );
-			DebugLog.Error( e );
+			DebugLog.getInstance().error( "Proxy - can't get I/O streams!" );
+			DebugLog.getInstance().error( e );
 			return	false;
 		}
 		return	true;
@@ -225,10 +225,10 @@ public class ProxyHandler	implements	Runnable
 											break;
 			case Constants.SOCKS5_Version:	comm = new Socks5Impl( this );	
 											break;
-			default:	DebugLog.Error( "Invalid SOKCS version : "+SOCKS_Version );
+			default:	DebugLog.getInstance().error( "Invalid SOKCS version : "+SOCKS_Version );
 						return;
 			}
-			DebugLog.Println( "Accepted SOCKS "+SOCKS_Version+" Request." );
+			DebugLog.getInstance().println( "Accepted SOCKS "+SOCKS_Version+" Request." );
 						
 			comm.Authenticate( SOCKS_Version );
 			comm.GetClientCommand();
@@ -247,7 +247,7 @@ public class ProxyHandler	implements	Runnable
 			}
 		}
 		catch( Exception   e )	{
-			DebugLog.Error( e );
+			DebugLog.getInstance().error( e );
 		}
 	} 
 
@@ -318,7 +318,7 @@ public class ProxyHandler	implements	Runnable
 				return	0;
 			}
 			catch( IOException e )		{
-				DebugLog.Println( "Client connection Closed!" );
+				DebugLog.getInstance().println( "Client connection Closed!" );
 				close();	//	Close the server on this exception
 				return -1;
 			}
@@ -345,7 +345,7 @@ public class ProxyHandler	implements	Runnable
 				return	0;
 			}
 			catch( IOException e )		{
-				DebugLog.Println( "Server connection Closed!" );
+				DebugLog.getInstance().println( "Server connection Closed!" );
 				close();	//	Close the server on this exception
 				return -1;
 			}
@@ -357,8 +357,8 @@ public class ProxyHandler	implements	Runnable
 	}
 
 	public	void	logServerData( int traffic )	{
-		DebugLog.Println("Srv data : "+
-					DebugLog.getSocketInfo( m_ClientSocket ) +
+		DebugLog.getInstance().println("Srv data : "+
+					DebugLog.getInstance().getSocketInfo( m_ClientSocket ) +
 					" << <"+
 					comm.m_ServerIP.getHostName()+"/"+
 					comm.m_ServerIP.getHostAddress()+":"+
@@ -368,8 +368,8 @@ public class ProxyHandler	implements	Runnable
 	
 
 	public	void	logClientData( int traffic )	{
-		DebugLog.Println("Cli data : "+
-					DebugLog.getSocketInfo( m_ClientSocket ) +
+		DebugLog.getInstance().println("Cli data : "+
+					DebugLog.getInstance().getSocketInfo( m_ClientSocket ) +
 					" >> <"+
 					comm.m_ServerIP.getHostName()+"/"+
 					comm.m_ServerIP.getHostAddress()+":"+

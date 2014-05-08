@@ -32,7 +32,7 @@ public class ProxyServerInitiator	implements	Runnable
 		
 		m_lock = this;	
 		m_nPort			= listenPort;
-		DebugLog.Println( "SOCKS Server Created." );
+		DebugLog.getInstance().println( "SOCKS Server Created." );
 	}
 	
 	public	void setLock( Object lock ) {
@@ -43,12 +43,12 @@ public class ProxyServerInitiator	implements	Runnable
 	public	void start() {
 		m_TheThread = new Thread( this );
 		m_TheThread.start();
-		DebugLog.Println( "SOCKS Server Started." );
+		DebugLog.getInstance().println( "SOCKS Server Started." );
 	}
 
 	public	void	stop()	{
 		
-		DebugLog.Println( "SOCKS Server Stopped." );
+		DebugLog.getInstance().println( "SOCKS Server Stopped." );
 		m_TheThread.interrupt();
 	}
 	
@@ -70,7 +70,7 @@ public class ProxyServerInitiator	implements	Runnable
 		}
 		m_ListenSocket = null;
 		
-		DebugLog.Println( "SOCKS Server Closed." );
+		DebugLog.getInstance().println( "SOCKS Server Closed." );
 	}
 	
 	public	boolean	isActive()	{
@@ -87,7 +87,7 @@ public class ProxyServerInitiator	implements	Runnable
 			if( m_nPort == 0 )	{
 				m_nPort = m_ListenSocket.getLocalPort();
 			}
-			DebugLog.Println( "SOCKS Server Listen at Port : " + m_nPort );
+			DebugLog.getInstance().println( "SOCKS Server Listen at Port : " + m_nPort );
 		}
 	}
 	
@@ -98,12 +98,12 @@ public class ProxyServerInitiator	implements	Runnable
 			prepareToListen();
 		}
 		catch( java.net.BindException e )	{
-			DebugLog.Error( "The Port "+m_nPort+" is in use !" );
-			DebugLog.Error( e );
+			DebugLog.getInstance().error( "The Port "+m_nPort+" is in use !" );
+			DebugLog.getInstance().error( e );
 			return;
 		}
 		catch( IOException e )	{
-			DebugLog.Error( "IO Error Binding at port : "+m_nPort );
+			DebugLog.getInstance().error( "IO Error Binding at port : "+m_nPort );
 			return;
 		}
 
@@ -123,7 +123,7 @@ public class ProxyServerInitiator	implements	Runnable
 			{
 				Socket clientSocket = m_ListenSocket.accept();
 				clientSocket.setSoTimeout( Constants.DEFAULT_SERVER_TIMEOUT );
-				DebugLog.Println( "Connection from : " + DebugLog.getSocketInfo( clientSocket ) );
+				DebugLog.getInstance().println( "Connection from : " + DebugLog.getInstance().getSocketInfo( clientSocket ) );
 				ProxyHandler proxy = new ProxyHandler(clientSocket );
 				proxy.start();
 			}
@@ -131,7 +131,7 @@ public class ProxyServerInitiator	implements	Runnable
 			//	This exception is thrown when accept timeout is expired
 			}
 			catch( Exception e )	{
-				DebugLog.Error( e );
+				DebugLog.getInstance().error( e );
 			}
 		}	// synchronized
 	}

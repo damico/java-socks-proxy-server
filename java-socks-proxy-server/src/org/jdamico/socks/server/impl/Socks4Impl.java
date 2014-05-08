@@ -1,29 +1,4 @@
-/*************************************************************************
- FILE :		  CSock4.java
 
- Author :	  Svetoslav Tchekanov  (swetoslav@iname.com)
-
- Description: CSock4 class definition.
-
-			  CSock4.class is the implementation of Socks4 copmmands
-
-
- Copyright notice:
-	Written by Svetoslav Tchekanov (swetoslav@iname.com)
-	Copyright(c) 2000
-
-This code may be used in compiled form in any way you desire. This
-file may be redistributed unmodified by any means PROVIDING it is 
-not sold for profit without the authors written consent, and 
-providing that this notice and the authors name is included. If 
-the source code in this file is used in any commercial application 
-then a simple email would be nice.
-
-This file is provided "as is" with no expressed or implied warranty.
-The author accepts no liability if it causes any damage to your
-computer.
-
-*************************************************************************/
 
 package	org.jdamico.socks.server.impl;
 
@@ -144,7 +119,7 @@ public class Socks4Impl
 		String		sIA = "";		
 		
 		if( addr.length < 4 )	{
-			DebugLog.Error( "calcInetAddress() - Invalid length of IP v4 - "+addr.length+" bytes" );	
+			DebugLog.getInstance().error( "calcInetAddress() - Invalid length of IP v4 - "+addr.length+" bytes" );	
 			return null;
 		}
 		
@@ -229,13 +204,13 @@ public class Socks4Impl
 			throw new Exception( "Socks 4 - Unknown Host/IP address '"+m_ServerIP.toString() );
 		}
 									
-		DebugLog.Println( "Accepted SOCKS 4 Command: \""+ commName( Command )+"\"" );
+		DebugLog.getInstance().println( "Accepted SOCKS 4 Command: \""+ commName( Command )+"\"" );
 	}  // GetClientCommand()
 	/////////////////////////////////////////////////////////////
 
 	public	void	Reply_Command( byte ReplyCode )
 	{
-		DebugLog.Println( "Socks 4 reply: \""+ReplyName( ReplyCode)+"\"" );
+		DebugLog.getInstance().println( "Socks 4 reply: \""+ReplyName( ReplyCode)+"\"" );
 		
 		byte[] REPLY = new byte[8];
 		REPLY[0]= 0;
@@ -252,7 +227,7 @@ public class Socks4Impl
 	/////////////////////////////////////////////////////////////
 			
 	protected	void	Refuse_Command( byte ErrorCode )	{
-		DebugLog.Println( "Socks 4 - Refuse Command: \""+ReplyName(ErrorCode)+"\"" );
+		DebugLog.getInstance().println( "Socks 4 - Refuse Command: \""+ReplyName(ErrorCode)+"\"" );
 		Reply_Command( ErrorCode );
 	}	// Refuse_Command()
 
@@ -260,7 +235,7 @@ public class Socks4Impl
 
 	protected	void	Connect() throws Exception {
 
-		DebugLog.Println( "Connecting..." );
+		DebugLog.getInstance().println( "Connecting..." );
 	//	Connect to the Remote Host
 		try	{
 			m_Parent.connectToServer( m_ServerIP.getHostAddress(), m_nServerPort );
@@ -268,10 +243,10 @@ public class Socks4Impl
 		catch( IOException e )	{
 			Refuse_Command( getFailCode() ); // Connection Refused
 			throw new Exception("Socks 4 - Can't connect to " +
-			DebugLog.getSocketInfo( m_Parent.m_ServerSocket ) );
+			DebugLog.getInstance().getSocketInfo( m_Parent.m_ServerSocket ) );
 		}
 		
-		DebugLog.Println( "Connected to "+DebugLog.getSocketInfo( m_Parent.m_ServerSocket ) );
+		DebugLog.getInstance().println( "Connected to "+DebugLog.getInstance().getSocketInfo( m_Parent.m_ServerSocket ) );
 		Reply_Command( getSuccessCode() );
 	}	// Connect()
 	
@@ -285,7 +260,7 @@ public class Socks4Impl
 	{
 		byte	IP[] = {0,0,0,0};
 		
-		DebugLog.Println( "Reply to Client : \""+ReplyName( ReplyCode )+"\"" );
+		DebugLog.getInstance().println( "Reply to Client : \""+ReplyName( ReplyCode )+"\"" );
 		
 		byte[] REPLY = new byte[8];
 		if( IA != null )	IP = IA.getAddress();
@@ -303,7 +278,7 @@ public class Socks4Impl
 			m_Parent.sendToClient( REPLY );
 		}
 		else	{
-			DebugLog.Println( "Closed BIND Client Connection" );
+			DebugLog.getInstance().println( "Closed BIND Client Connection" );
 		}
 	} // Reply_Command()
 	
@@ -325,7 +300,7 @@ public class Socks4Impl
 				return m_ExtLocalIP;
 			}
 			catch( IOException e )	{
-				DebugLog.Println( "WARNING !!! THE LOCAL IP ADDRESS WAS CHANGED !" );
+				DebugLog.getInstance().println( "WARNING !!! THE LOCAL IP ADDRESS WAS CHANGED !" );
 			}
 		}
 		
@@ -341,7 +316,7 @@ public class Socks4Impl
 				break;
     		}
 			catch( Exception e )	{  // IP == null
-				DebugLog.Println( "Error in BIND() - BIND reip Failed at "+i );
+				DebugLog.getInstance().println( "Error in BIND() - BIND reip Failed at "+i );
 			}
 		}
 		
@@ -357,18 +332,18 @@ public class Socks4Impl
 		InetAddress		MyIP	= null;
 		int				MyPort	= 0;
 		
-		DebugLog.Println( "Binding..." );
+		DebugLog.getInstance().println( "Binding..." );
 		// Resolve External IP
 		MyIP = ResolveExternalLocalIP();
 
 // It have not matter ... ask me for more...		
 /*		if( MyIP == null )	{
-			Log.Error(this, "BIND()", "Can't resolve local IP");	
+			Log.error(this, "BIND()", "Can't resolve local IP");	
 			BIND_Reply( (byte)91, MyIP,MyPort );
 			return;
 		}
 */	
-		DebugLog.Println( "Local IP : " + MyIP.toString() );
+		DebugLog.getInstance().println( "Local IP : " + MyIP.toString() );
 		
 		
 		try	{	
@@ -377,13 +352,13 @@ public class Socks4Impl
 			MyPort	= ssock.getLocalPort();
 		}
 		catch( IOException e )	{  // MyIP == null
-			DebugLog.Println( "Error in BIND() - Can't BIND at any Port" );
+			DebugLog.getInstance().println( "Error in BIND() - Can't BIND at any Port" );
 			BIND_Reply( (byte)92, MyIP,MyPort );
 			ssock.close();
 			return;
 		}
 
-		DebugLog.Println( "BIND at : <"+MyIP.toString()+":"+MyPort+">" );
+		DebugLog.getInstance().println( "BIND at : <"+MyIP.toString()+":"+MyPort+">" );
 		BIND_Reply( (byte)90, MyIP, MyPort );
 									 
 		Socket	socket = null;
@@ -391,7 +366,7 @@ public class Socks4Impl
 		while( socket == null )
 		{
 			if( m_Parent.checkClientData() >= 0 ) {
-				DebugLog.Println( "BIND - Client connection closed" );
+				DebugLog.getInstance().println( "BIND - Client connection closed" );
 				ssock.close();
 				return;
 			}
@@ -425,7 +400,7 @@ public class Socks4Impl
 		m_Parent.m_ServerSocket = socket;
 		m_Parent.prepareServer();
 		
-		DebugLog.Println( "BIND Connection from "+DebugLog.getSocketInfo( m_Parent.m_ServerSocket ) );
+		DebugLog.getInstance().println( "BIND Connection from "+DebugLog.getInstance().getSocketInfo( m_Parent.m_ServerSocket ) );
 		ssock.close();
 		
 		
@@ -434,8 +409,8 @@ public class Socks4Impl
 
 	public	void	UDP() throws IOException
 	{
-		DebugLog.Println( "Error - Socks 4 don't support UDP Association!" );
-		DebugLog.Println( "Check your Software please..." );
+		DebugLog.getInstance().println( "Error - Socks 4 don't support UDP Association!" );
+		DebugLog.getInstance().println( "Check your Software please..." );
 		Refuse_Command( (byte)91 );	// SOCKS4 don't support UDP
 	}
 	/////////////////////////////////////////////////////////////
